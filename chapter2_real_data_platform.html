@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第二章真实数据可视化平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white; min-height: 100vh; line-height: 1.6;
+        }
+        .header {
+            background: rgba(255,255,255,0.1); 
+            padding: 30px 0; text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; color: #4ecdc4; }
+        .header p { font-size: 1.2rem; opacity: 0.8; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .controls { 
+            background: rgba(255,255,255,0.05); 
+            padding: 25px; border-radius: 15px; 
+            margin-bottom: 25px; backdrop-filter: blur(5px);
+        }
+        .data-selector { margin-bottom: 20px; }
+        .data-selector label { display: block; margin-bottom: 10px; font-weight: bold; }
+        .data-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .data-btn { 
+            background: #4ecdc4; border: none; color: white; 
+            padding: 12px 20px; border-radius: 8px; cursor: pointer; 
+            font-size: 14px; transition: all 0.3s ease;
+        }
+        .data-btn:hover { background: #45b7d1; transform: translateY(-2px); }
+        .data-btn.active { background: #ff6b6b; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4); }
+        .chart-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+        .chart-btn { 
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            color: white; padding: 10px 15px; border-radius: 6px; 
+            cursor: pointer; font-size: 14px; transition: all 0.3s ease;
+        }
+        .chart-btn:hover { background: rgba(255,255,255,0.2); }
+        .chart-btn.active { background: #4ecdc4; border-color: #4ecdc4; }
+        .chart-container { 
+            background: rgba(255,255,255,0.05); 
+            padding: 25px; border-radius: 15px; 
+            margin-bottom: 25px; backdrop-filter: blur(5px);
+        }
+        canvas { width: 100% !important; height: 500px !important; }
+        .chart-info { 
+            margin-top: 20px; padding: 15px; 
+            background: rgba(255,255,255,0.05); 
+            border-radius: 8px; font-size: 14px; 
+            border-left: 4px solid #4ecdc4;
+        }
+        .data-preview { 
+            background: rgba(255,255,255,0.05); 
+            padding: 15px; border-radius: 8px; 
+            margin-top: 15px; max-height: 200px; overflow-y: auto;
+        }
+        .loading { text-align: center; padding: 20px; color: #4ecdc4; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .data-table th, .data-table td { 
+            padding: 8px; text-align: left; 
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .data-table th { background: rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>第二章真实数据可视化平台</h1>
+        <p>基于实际CSV数据的交互式可视化分析</p>
+    </div>
+
+    <div class="container">
+        <div class="controls">
+            <div class="data-selector">
+                <label>选择数据集：</label>
+                <div class="data-buttons">
+                    <button class="data-btn active" onclick="loadDataset('mpg')">汽车数据 (mpg_ggplot2.csv)</button>
+                    <button class="data-btn" onclick="loadDataset('usarrests')">美国犯罪数据 (USArrests.csv)</button>
+                    <button class="data-btn" onclick="loadDataset('cities')">美国城市数据 (2014_us_cities.csv)</button>
+                </div>
+            </div>
+            
+            <div class="chart-buttons">
+                <button class="chart-btn active" onclick="showChart('scatter')">散点图</button>
+                <button class="chart-btn" onclick="showChart('bar')">柱状图</button>
+                <button class="chart-btn" onclick="showChart('line')">折线图</button>
+                <button class="chart-btn" onclick="showChart('pie')">饼图</button>
+                <button class="chart-btn" onclick="showChart('histogram')">直方图</button>
+                <button class="chart-btn" onclick="showChart('radar')">雷达图</button>
+                <button class="chart-btn" onclick="showChart('bubble')">气泡图</button>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div id="loading" class="loading">正在加载数据...</div>
+            <canvas id="myChart"></canvas>
+            <div class="chart-info" id="chartInfo"></div>
+            <div class="data-preview" id="dataPreview"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentChart = null;
+        let currentDataset = null;
+        let currentDataType = 'mpg';
+        
+        // 颜色配置
+        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'];
+        
+        // 数据集描述
+        const datasetInfo = {
+            mpg: {
+                name: '汽车燃油效率数据',
+                description: '包含不同制造商、车型的排量、油耗等数据',
+                file: '素材/mpg_ggplot2.csv'
+            },
+            usarrests: {
+                name: '美国各州犯罪数据',
+                description: '包含各州的谋杀、袭击、强奸等犯罪率数据',
+                file: '素材/USArrests.csv'
+            },
+            cities: {
+                name: '美国城市人口数据',
+                description: '包含美国主要城市的人口数量和地理位置数据',
+                file: '素材/2014_us_cities.csv'
+            }
+        };
+        
+        // 图表类型描述
+        const chartDescriptions = {
+            scatter: "散点图 - 显示两个连续变量之间的关系，适合相关性分析",
+            bar: "柱状图 - 比较不同类别的数值大小，适合分类数据对比",
+            line: "折线图 - 显示数据随时间或其他连续变量的趋势变化",
+            pie: "饼图 - 显示各部分占整体的比例关系",
+            histogram: "直方图 - 显示数据分布频率，分析数据分布特征",
+            radar: "雷达图 - 多维数据对比分析，展示综合表现",
+            bubble: "气泡图 - 三个维度的数据可视化，气泡大小表示第三个变量"
+        };
+
+        // 加载数据集
+        function loadDataset(type) {
+            currentDataType = type;
+            document.querySelectorAll('.data-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('myChart').style.display = 'none';
+            
+            Papa.parse(datasetInfo[type].file, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    currentDataset = results.data;
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('myChart').style.display = 'block';
+                    
+                    // 显示数据预览
+                    showDataPreview();
+                    
+                    // 默认显示散点图
+                    showChart('scatter');
+                },
+                error: function(error) {
+                    console.error('数据加载错误:', error);
+                    document.getElementById('loading').innerHTML = '数据加载失败，请检查文件路径';
+                }
+            });
+        }
+
+        // 显示数据预览
+        function showDataPreview() {
+            const preview = document.getElementById('dataPreview');
+            if (!currentDataset || currentDataset.length === 0) {
+                preview.innerHTML = '<p>无数据可显示</p>';
+                return;
+            }
+            
+            const headers = Object.keys(currentDataset[0]);
+            let html = `<h4>数据预览 (前5行)</h4>`;
+            html += `<table class="data-table">`;
+            html += `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+            
+            currentDataset.slice(0, 5).forEach(row => {
+                html += `<tr>${headers.map(h => `<td>${row[h] || ''}</td>`).join('')}</tr>`;
+            });
+            
+            html += `</table>`;
+            html += `<p>总记录数: ${currentDataset.length}</p>`;
+            preview.innerHTML = html;
+        }
+
+        // 显示图表
+        function showChart(type) {
+            if (!currentDataset) return;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 更新图表描述
+            document.getElementById('chartInfo').innerHTML = 
+                `<strong>${chartDescriptions[type]}</strong><br>数据集: ${datasetInfo[currentDataType].name}`;
+            
+            // 销毁现有图表
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            const ctx = document.getElementById('myChart').getContext('2d');
+            
+            switch(type) {
+                case 'scatter':
+                    createScatterChart(ctx);
+                    break;
+                case 'bar':
+                    createBarChart(ctx);
+                    break;
+                case 'line':
+                    createLineChart(ctx);
+                    break;
+                case 'pie':
+                    createPieChart(ctx);
+                    break;
+                case 'histogram':
+                    createHistogramChart(ctx);
+                    break;
+                case 'radar':
+                    createRadarChart(ctx);
+                    break;
+                case 'bubble':
+                    createBubbleChart(ctx);
+                    break;
+            }
+        }
+
+        // 创建散点图
+        function createScatterChart(ctx) {
+            let xData, yData, label;
+            
+            if (currentDataType === 'mpg') {
+                xData = currentDataset.map(d => parseFloat(d.displ));
+                yData = currentDataset.map(d => parseFloat(d.cty));
+                label = '城市油耗 vs 排量';
+            } else if (currentDataType === 'usarrests') {
+                xData = currentDataset.map(d => parseFloat(d.Assault));
+                yData = currentDataset.map(d => parseFloat(d.Murder));
+                label = '谋杀率 vs 袭击率';
+            } else {
+                xData = currentDataset.map(d => parseFloat(d.lon));
+                yData = currentDataset.map(d => parseFloat(d.lat));
+                label = '城市地理位置';
+            }
+            
+            const scatterData = xData.map((x, i) => ({x: x, y: yData[i]}));
+            
+            currentChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: label,
+                        data: scatterData,
+                        backgroundColor: colors[0],
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: 'X轴' } },
+                        y: { title: { display: true, text: 'Y轴' } }
+                    }
+                }
+            });
+        }
+
+        // 创建柱状图
+        function createBarChart(ctx) {
+            let labels, data, label;
+            
+            if (currentDataType === 'mpg') {
+                const manufacturerCount = {};
+                currentDataset.forEach(d => {
+                    manufacturerCount[d.manufacturer] = (manufacturerCount[d.manufacturer] || 0) + 1;
+                });
+                labels = Object.keys(manufacturerCount);
+                data = Object.values(manufacturerCount);
+                label = '各制造商车型数量';
+            } else if (currentDataType === 'usarrests') {
+                labels = currentDataset.map(d => d.State);
+                data = currentDataset.map(d => parseFloat(d.Murder));
+                label = '各州谋杀率';
+            } else {
+                // 取人口最多的10个城市
+                const sortedCities = currentDataset
+                    .sort((a, b) => parseFloat(b.pop) - parseFloat(a.pop))
+                    .slice(0, 10);
+                labels = sortedCities.map(d => d.name);
+                data = sortedCities.map(d => parseFloat(d.pop) / 1000000); // 转换为百万
+                label = '人口最多的10个城市 (百万)';
+            }
+            
+            currentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: colors
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // 创建折线图
+        function createLineChart(ctx) {
+            // 简化实现，使用柱状图数据
+            createBarChart(ctx);
+            currentChart.config.type = 'line';
+            currentChart.update();
+        }
+
+        // 创建饼图
+        function createPieChart(ctx) {
+            let labels, data;
+            
+            if (currentDataType === 'mpg') {
+                const classCount = {};
+                currentDataset.forEach(d => {
+                    classCount[d.class] = (classCount[d.class] || 0) + 1;
+                });
+                labels = Object.keys(classCount);
+                data = Object.values(classCount);
+            } else if (currentDataType === 'usarrests') {
+                // 按地区分组（简化）
+                labels = ['低犯罪率', '中犯罪率', '高犯罪率'];
+                const murderRates = currentDataset.map(d => parseFloat(d.Murder));
+                const avg = murderRates.reduce((a, b) => a + b) / murderRates.length;
+                data = [
+                    murderRates.filter(r => r < avg - 5).length,
+                    murderRates.filter(r => r >= avg - 5 && r <= avg + 5).length,
+                    murderRates.filter(r => r > avg + 5).length
+                ];
+            } else {
+                // 按人口规模分组
+                labels = ['小城市(<50万)', '中等城市(50-100万)', '大城市(>100万)'];
+                const populations = currentDataset.map(d => parseFloat(d.pop));
+                data = [
+                    populations.filter(p => p < 500000).length,
+                    populations.filter(p => p >= 500000 && p <= 1000000).length,
+                    populations.filter(p => p > 1000000).length
+                ];
+            }
+            
+            currentChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // 创建直方图
+        function createHistogramChart(ctx) {
+            let data, label;
+            
+            if (currentDataType === 'mpg') {
+                data = currentDataset.map(d => parseFloat(d.cty));
+                label = '城市油耗分布';
+            } else if (currentDataType === 'usarrests') {
+                data = currentDataset.map(d => parseFloat(d.Murder));
+                label = '谋杀率分布';
+            } else {
+                data = currentDataset.map(d => Math.log10(parseFloat(d.pop))); // 使用对数尺度
+                label = '城市人口分布 (对数尺度)';
+            }
+            
+            currentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: colors[0]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            offset: true,
+                            grid: { display: false },
+                            title: { display: true, text: '数值区间' }
+                        },
+                        y: { title: { display: true, text: '频数' } }
+                    }
+                }
+            });
+        }
+
+        // 创建雷达图
+        function createRadarChart(ctx) {
+            if (currentDataType !== 'usarrests') {
+                document.getElementById('chartInfo').innerHTML = 
+                    '<strong>雷达图最适合美国犯罪数据，请切换到USArrests数据集</strong>';
+                return;
+            }
+            
+            // 取前5个州的数据
+            const states = currentDataset.slice(0, 5);
+            const labels = ['Murder', 'Assault', 'UrbanPop', 'Rape'];
+            
+            currentChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: states.map((state, i) => ({
+                        label: state.State,
+                        data: [
+                            parseFloat(state.Murder),
+                            parseFloat(state.Assault) / 10, // 缩放
+                            parseFloat(state.UrbanPop),
+                            parseFloat(state.Rape)
+                        ],
+                        backgroundColor: colors[i] + '20',
+                        borderColor: colors[i],
+                        pointBackgroundColor: colors[i]
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // 创建气泡图
+        function createBubbleChart(ctx) {
+            let data, label;
+            
+            if (currentDataType === 'mpg') {
+                data = currentDataset.slice(0, 20).map(d => ({
+                    x: parseFloat(d.displ),
+                    y: parseFloat(d.cty),
+                    r: parseFloat(d.cyl) * 2
+                }));
+                label = '排量 vs 油耗 (气泡大小表示气缸数)';
+            } else if (currentDataType === 'usarrests') {
+                data = currentDataset.map(d => ({
+                    x: parseFloat(d.Assault),
+                    y: parseFloat(d.Murder),
+                    r: parseFloat(d.UrbanPop) / 5
+                }));
+                label = '袭击率 vs 谋杀率 (气泡大小表示城市人口比例)';
+            } else {
+                data = currentDataset.slice(0, 50).map(d => ({
+                    x: parseFloat(d.lon),
+                    y: parseFloat(d.lat),
+                    r: Math.sqrt(parseFloat(d.pop)) / 1000
+                }));
+                label = '城市地理位置 (气泡大小表示人口)';
+            }
+            
+            currentChart = new Chart(ctx, {
+                type: 'bubble',
+                data: {
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: colors[0] + '80'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // 初始化加载MPG数据
+        window.onload = function() {
+            loadDataset('mpg');
+        };
+    </script>
+</body>
+</html>
