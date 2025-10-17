@@ -145,15 +145,19 @@
         };
 
         // 加载数据集
-        function loadDataset(type) {
+        function loadDataset(type, event) {
             currentDataType = type;
             document.querySelectorAll('.data-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
             
             document.getElementById('loading').style.display = 'block';
             document.getElementById('myChart').style.display = 'none';
             
-            Papa.parse(datasetInfo[type].file, {
+            // 修复文件路径 - 使用相对路径
+            const filePath = datasetInfo[type].file.replace('素材/', './素材/');
+            Papa.parse(filePath, {
                 download: true,
                 header: true,
                 complete: function(results) {

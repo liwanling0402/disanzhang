@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第二章数据可视化平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white; min-height: 100vh; padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { 
+            text-align: center; margin-bottom: 40px; padding: 30px;
+            background: rgba(255,255,255,0.1); border-radius: 20px;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
+        }
+        h1 { 
+            font-size: 2.5rem; margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .dashboard { display: grid; grid-template-columns: 300px 1fr; gap: 30px; }
+        .sidebar, .main-content { 
+            background: rgba(255,255,255,0.1); border-radius: 15px; padding: 25px;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
+        }
+        .dataset-card { 
+            background: rgba(255,255,255,0.15); border-radius: 10px; padding: 15px;
+            margin-bottom: 15px; cursor: pointer; transition: all 0.3s ease;
+        }
+        .dataset-card:hover { transform: translateY(-2px); background: rgba(255,255,255,0.2); }
+        .dataset-card.active { border: 2px solid #4ecdc4; }
+        .chart-wrapper { height: 500px; margin: 20px 0; }
+        .chart-controls { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+        .chart-type-btn { 
+            padding: 8px 16px; border: 2px solid #4ecdc4; background: transparent;
+            color: #4ecdc4; border-radius: 5px; cursor: pointer; transition: all 0.3s;
+        }
+        .chart-type-btn.active { background: #4ecdc4; color: #1e3c72; }
+        @media (max-width: 1024px) { .dashboard { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>第二章数据可视化平台</h1>
+            <p>基于《数据可视化》第二章内容的交互式图表展示</p>
+        </header>
+        
+        <div class="dashboard">
+            <div class="sidebar">
+                <h3>数据集选择</h3>
+                <div id="datasetList"></div>
+            </div>
+            
+            <div class="main-content">
+                <h3 id="chartTitle">请选择数据集</h3>
+                <div class="chart-controls" id="chartControls" style="display:none;">
+                    <button class="chart-type-btn active" data-type="line">折线图</button>
+                    <button class="chart-type-btn" data-type="bar">柱状图</button>
+                    <button class="chart-type-btn" data-type="pie">饼图</button>
+                    <button class="chart-type-btn" data-type="scatter">散点图</button>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="mainChart"></canvas>
+                </div>
+                <div id="dataInfo">共 0 条数据</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 第二章数据集
+        const chapter2Data = {
+            temperatureData: {
+                title: '未来15天气温趋势',
+                data: [
+                    { day: '第1天', maxTemp: 32, minTemp: 19 },
+                    { day: '第2天', maxTemp: 33, minTemp: 19 },
+                    { day: '第3天', maxTemp: 34, minTemp: 20 },
+                    { day: '第4天', maxTemp: 34, minTemp: 22 },
+                    { day: '第5天', maxTemp: 33, minTemp: 22 },
+                    { day: '第6天', maxTemp: 31, minTemp: 21 },
+                    { day: '第7天', maxTemp: 30, minTemp: 22 },
+                    { day: '第8天', maxTemp: 29, minTemp: 16 },
+                    { day: '第9天', maxTemp: 30, minTemp: 18 },
+                    { day: '第10天', maxTemp: 29, minTemp: 18 }
+                ]
+            },
+            alibabaGMVData: {
+                title: '阿里巴巴GMV统计',
+                data: [
+                    { year: '2013', gmv: 10770 },
+                    { year: '2014', gmv: 16780 },
+                    { year: '2015', gmv: 24440 },
+                    { year: '2016', gmv: 30920 },
+                    { year: '2017', gmv: 37670 },
+                    { year: '2018', gmv: 48200 },
+                    { year: '2019', gmv: 57270 }
+                ]
+            },
+            shoppingRateData: {
+                title: '网购替代率',
+                data: [
+                    { category: '家政服务', rate: 0.959 },
+                    { category: '机票火车票', rate: 0.951 },
+                    { category: '家具', rate: 0.935 },
+                    { category: '手机配件', rate: 0.924 },
+                    { category: '计算机产品', rate: 0.893 },
+                    { category: '汽车用品', rate: 0.892 },
+                    { category: '通信充值', rate: 0.865 }
+                ]
+            },
+            carSpeedData: {
+                title: '汽车速度与制动距离',
+                data: [
+                    { speed: 10, distance: 0.5 },
+                    { speed: 20, distance: 2.0 },
+                    { speed: 30, distance: 4.4 },
+                    { speed: 40, distance: 7.9 },
+                    { speed: 50, distance: 12.3 },
+                    { speed: 60, distance: 17.7 },
+                    { speed: 70, distance: 24.1 },
+                    { speed: 80, distance: 31.5 },
+                    { speed: 90, distance: 39.9 },
+                    { speed: 100, distance: 49.2 }
+                ]
+            }
+        };
+
+        let currentChart = null;
+        let currentDataset = null;
+
+        // 初始化页面
+        function initPage() {
+            renderDatasetList();
+            setupChartControls();
+        }
+
+        // 渲染数据集列表
+        function renderDatasetList() {
+            const list = document.getElementById('datasetList');
+            list.innerHTML = '';
+            
+            Object.entries(chapter2Data).forEach(([key, dataset]) => {
+                const card = document.createElement('div');
+                card.className = 'dataset-card';
+                card.innerHTML = `<strong>${dataset.title}</strong><br>${dataset.data.length}条数据`;
+                card.addEventListener('click', () => selectDataset(key, dataset));
+                list.appendChild(card);
+            });
+        }
+
+        // 选择数据集
+        function selectDataset(key, dataset) {
+            currentDataset = { key, ...dataset };
+            
+            // 更新UI
+            document.querySelectorAll('.dataset-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            document.getElementById('chartControls').style.display = 'flex';
+            document.getElementById('chartTitle').textContent = dataset.title;
+            
+            renderChart('line');
+        }
+
+        // 设置图表控制
+        function setupChartControls() {
+            document.querySelectorAll('.chart-type-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const type = e.target.dataset.type;
+                    document.querySelectorAll('.chart-type-btn').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    e.target.classList.add('active');
+                    renderChart(type);
+                });
+            });
+        }
+
+        // 渲染图表
+        function renderChart(type) {
+            if (!currentDataset) return;
+            
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if (currentChart) currentChart.destroy();
+            
+            const config = getChartConfig(currentDataset, type);
+            currentChart = new Chart(ctx, config);
+            
+            document.getElementById('dataInfo').textContent = 
+                `共 ${currentDataset.data.length} 条数据 | 图表类型: ${getChartTypeName(type)}`;
+        }
+
+        // 获取图表配置
+        function getChartConfig(dataset, type) {
+            const commonConfig = {
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { 
+                        labels: { color: 'white', font: { size: 12 } }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white'
+                    }
+                }
+            };
+
+            switch (type) {
+                case 'line':
+                    return getLineChartConfig(dataset, commonConfig);
+                case 'bar':
+                    return getBarChartConfig(dataset, commonConfig);
+                case 'pie':
+                    return getPieChartConfig(dataset, commonConfig);
+                case 'scatter':
+                    return getScatterChartConfig(dataset, commonConfig);
+                default:
+                    return getLineChartConfig(dataset, commonConfig);
+            }
+        }
+
+        // 折线图配置
+        function getLineChartConfig(dataset, commonConfig) {
+            const labels = dataset.data.map(item => item.day || item.year);
+            const datasets = [];
+            
+            if (dataset.key === 'temperatureData') {
+                datasets.push({
+                    label: '最高气温', 
+                    data: dataset.data.map(item => item.maxTemp),
+                    borderColor: '#FF6B6B', 
+                    backgroundColor: 'rgba(255,107,107,0.1)', 
+                    tension: 0.4,
+                    fill: true
+                });
+                datasets.push({
+                    label: '最低气温', 
+                    data: dataset.data.map(item => item.minTemp),
+                    borderColor: '#4ECDC4', 
+                    backgroundColor: 'rgba(78,205,196,0.1)', 
+                    tension: 0.4,
+                    fill: true
+                });
+            } else {
+                const numericKey = Object.keys(dataset.data[0]).find(key => 
+                    typeof dataset.data[0][key] === 'number' && key !== 'rate'
+                );
+                datasets.push({
+                    label: numericKey, 
+                    data: dataset.data.map(item => item[numericKey]),
+                    borderColor: '#667eea', 
+                    backgroundColor: 'rgba(102,126,234,0.1)', 
+                    tension: 0.4
+                });
+            }
+            
+            return { 
+                ...commonConfig, 
+                type: 'line', 
+                data: { labels, datasets },
+                options: {
+                    ...commonConfig,
+                    scales: {
+                        x: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        y: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 柱状图配置
+        function getBarChartConfig(dataset, commonConfig) {
+            const labels = dataset.data.map(item => item.year || item.category);
+            const data = dataset.data.map(item => item.gmv || item.rate * 100);
+            
+            return {
+                ...commonConfig, 
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: dataset.key === 'shoppingRateData' ? '替代率(%)' : 'GMV',
+                        data, 
+                        backgroundColor: 'rgba(102,126,234,0.8)',
+                        borderColor: '#667eea',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    ...commonConfig,
+                    scales: {
+                        x: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        y: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 饼图配置
+        function getPieChartConfig(dataset, commonConfig) {
+            const labels = dataset.data.map(item => item.category);
+            const data = dataset.data.map(item => item.rate * 100);
+            
+            return {
+                ...commonConfig, 
+                type: 'pie',
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        backgroundColor: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'],
+                        borderColor: 'rgba(255,255,255,0.3)',
+                        borderWidth: 2
+                    }]
+                }
+            };
+        }
+
+        // 散点图配置
+        function getScatterChartConfig(dataset, commonConfig) {
+            const data = dataset.data.map(item => ({ x: item.speed, y: item.distance }));
+            
+            return {
+                ...commonConfig, 
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '速度 vs 制动距离', 
+                        data,
+                        backgroundColor: 'rgba(78,205,196,0.8)',
+                        borderColor: '#4ECDC4',
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    ...commonConfig,
+                    scales: {
+                        x: {
+                            title: { display: true, text: '速度 (km/h)', color: 'white' },
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        y: {
+                            title: { display: true, text: '制动距离 (m)', color: 'white' },
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 获取图表类型名称
+        function getChartTypeName(type) {
+            const names = { line: '折线图', bar: '柱状图', pie: '饼图', scatter: '散点图' };
+            return names[type] || type;
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

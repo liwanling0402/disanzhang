@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第二章数据可视化交互平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white; min-height: 100vh;
+        }
+        .header {
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
+            padding: 30px 0; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .header h1 { font-size: 2.8rem; margin-bottom: 10px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
+        .controls { background: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 25px; margin-bottom: 40px; }
+        .chart-type-selector { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .chart-btn { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: white; padding: 15px; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; }
+        .chart-btn:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
+        .chart-btn.active { background: linear-gradient(45deg, #ff6b6b, #4ecdc4); }
+        .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(600px, 1fr)); gap: 30px; }
+        .chart-card { background: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 25px; }
+        .chart-container { position: relative; height: 400px; width: 100%; }
+        canvas { width: 100% !important; height: 100% !important; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>第二章数据可视化交互平台</h1>
+        <p>基于Matplotlib的10种图表类型完整实现</p>
+    </div>
+
+    <div class="container">
+        <div class="controls">
+            <div class="chart-type-selector">
+                <button class="chart-btn active" onclick="showChart('line')">折线图</button>
+                <button class="chart-btn" onclick="showChart('bar')">柱状图</button>
+                <button class="chart-btn" onclick="showChart('pie')">饼图</button>
+                <button class="chart-btn" onclick="showChart('scatter')">散点图</button>
+                <button class="chart-btn" onclick="showChart('area')">面积图</button>
+                <button class="chart-btn" onclick="showChart('histogram')">直方图</button>
+                <button class="chart-btn" onclick="showChart('box')">箱形图</button>
+                <button class="chart-btn" onclick="showChart('radar')">雷达图</button>
+                <button class="chart-btn" onclick="showChart('errorbar')">误差棒图</button>
+                <button class="chart-btn" onclick="showChart('all')">全部图表</button>
+            </div>
+        </div>
+
+        <div class="chart-grid" id="chartContainer">
+            <!-- 图表将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <script>
+        // 第二章数据
+        const chapter2Data = {
+            temperature: {
+                labels: ['第1天', '第2天', '第3天', '第4天', '第5天', '第6天', '第7天', '第8天', '第9天', '第10天', '第11天', '第12天', '第13天', '第14天', '第15天'],
+                datasets: [
+                    { label: '最高气温', data: [32, 33, 34, 34, 33, 31, 30, 29, 30, 29, 26, 23, 21, 25, 31], color: '#ff6b6b' },
+                    { label: '最低气温', data: [19, 19, 20, 22, 22, 21, 22, 16, 18, 18, 17, 14, 15, 16, 16], color: '#4ecdc4' }
+                ]
+            }
+        };
+
+        let currentCharts = [];
+
+        // 初始化图表
+        function initCharts() {
+            showChart('all');
+        }
+
+        // 显示特定类型的图表
+        function showChart(type) {
+            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const container = document.getElementById('chartContainer');
+            container.innerHTML = '';
+            currentCharts = [];
+
+            const datasets = chapter2Data.temperature;
+
+            if (type === 'all' || type === 'line') {
+                createLineChart(datasets);
+            }
+            if (type === 'all' || type === 'bar') {
+                createBarChart(datasets);
+            }
+            if (type === 'all' || type === 'pie') {
+                createPieChart();
+            }
+            if (type === 'all' || type === 'scatter') {
+                createScatterChart();
+            }
+            if (type === 'all' || type === 'area') {
+                createAreaChart(datasets);
+            }
+            if (type === 'all' || type === 'histogram') {
+                createHistogramChart();
+            }
+            if (type === 'all' || type === 'box') {
+                createBoxChart();
+            }
+            if (type === 'all' || type === 'radar') {
+                createRadarChart();
+            }
+            if (type === 'all' || type === 'errorbar') {
+                createErrorBarChart();
+            }
+        }
+
+        // 创建折线图
+        function createLineChart(datasets) {
+            const card = createChartCard('折线图 - 未来15天气温趋势');
+            const ctx = card.querySelector('canvas').getContext('2d');
+
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: datasets.labels,
+                    datasets: datasets.datasets.map(ds => ({
+                        label: ds.label,
+                        data: ds.data,
+                        borderColor: ds.color,
+                        backgroundColor: ds.color + '20',
+                        tension: 0.4,
+                        fill: true
+                    }))
+                },
+                options: getChartOptions()
+            });
+            currentCharts.push(chart);
+        }
+
+        // 创建柱状图
+        function createBarChart(datasets) {
+            const card = createChartCard('柱状图 - 气温对比');
+            const ctx = card.querySelector('canvas').getContext('2d');
+
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: datasets.labels,
+                    datasets: datasets.datasets.map(ds => ({
+                        label: ds.label,
+                        data: ds.data,
+                        backgroundColor: ds.color
+                    }))
+                },
+                options: getChartOptions()
+            });
+            currentCharts.push(chart);
+        }
+
+        // 创建饼图
+        function createPieChart() {
+            const card = createChartCard('饼图 - 气温分布比例');
+            const ctx = card.querySelector('canvas').getContext('2d');
+
+            const chart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['高温区间', '中温区间', '低温区间'],
+                    datasets: [{
+                        data: [40, 35, 25],
+                        backgroundColor: ['#ff6b6b', '#4ecdc4', '#45b7d1']
+                    }]
+                },
+                options: getChartOptions()
+            });
+            currentCharts.push(chart);
+        }
+
+        // 创建散点图
+        function createScatterChart() {
+            const card = createChartCard('散点图 - 气温分布');
+            const ctx = card.querySelector('canvas').getContext('2d');
+
+            const chart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '气温分布',
+                        data: [
+                            {x: 1, y: 32}, {x: 2, y: 33}, {x: 3, y: 34}, {x: 4, y: 34}, {x: 5, y: 33},
+                            {x: 6, y: 31}, {x: 7, y: 30}, {x: 8, y: 29}, {x: 9, y: 30}, {x: 10, y: 29}
+                        ],
+                        backgroundColor: '#4ecdc4',
+                        pointRadius: 6
+                    }]
+                },
+                options: getChartOptions()
+            });
+            currentCharts.push(chart);
+        }
+
+        // 创建面积图
+        function createAreaChart(datasets) {
+            const card = createChartCard('面积图 - 气温变化趋势');
+            const ctx = card.querySelector('canvas').getContext('2d');
+
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: datasets.labels,
+                    datasets: datasets.datasets.map(ds => ({
+                        label: ds.label,
+                        data: ds.data,
+                        backgroundColor: ds.color + '40',
+                        borderColor: ds.color,
+                        fill: true,
+                        tension: 0.4
+                    }))
+                },
+                options: getChartOptions()
+            });
+            currentCharts.push(chart);
+        }
+
+        // 创建直方图
+        function createHistogramChart() {
+            const card = createChartCard('直方图 - 气温频率分布');
+            const ctx = card.querySelector('canvas').getContext('2d');
+
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['15-20°C', '20-25°C', '25-30°C', '30-35°C'],
+                    datasets: [{
+                        label: '天数',
+                        data: [3, 5, 4, 3],
+                        backgroundColor: '#ff9ff3'
+                    }]
+                },
+                options: getChartOptions()
+            });
+            currentCharts.push(chart);
+        }
+
+        // 创建箱形图
+        function createBoxChart() {
+            const card = createChartCard('箱形图 - 气温统计分布');
+            const ctx = card.querySelector('canvas').getContext('2d');
+
+            const chart = new Chart(ctx, {
+                type: 'boxplot',
+                data: {
+                    labels: ['最高气温', '最低气温'],
+                    datasets: [{
+                        label: '气温分布',
+                        data: [
+                            [21, 25, 29, 31, 34],
+                            [14, 16, 18, 21, 22]
+                        ],
+                        backgroundColor: 'rgba(255, 107, 107, 0.5)',
+                        borderColor: '#ff6b6b'
+                    }]
+                },
+                options: getChartOptions()
+            });
+            currentCharts.push(chart);
+        }
+
+        // 创建雷达图
+        function createRadarChart() {
+            const card = createChartCard('雷达图 - 气温多维分析');
+            const ctx = card.querySelector('canvas').getContext('2d');
+
+            const chart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['稳定性', '变化幅度', '平均值', '极值范围', '趋势性'],
+                    datasets: [{
+                        label: '气温指标',
+                        data: [0.7, 0.8, 0.6, 0.9, 0.5],
+                        backgroundColor: 'rgba(255, 107, 107, 0.2)',
+                        borderColor: '#ff6b6b'
+                    }]
+                },
+                options: getChartOptions()
+            });
+            currentCharts.push(chart);
+        }
+
+        // 创建误差棒图
+        function createErrorBarChart() {
+            const card = createChartCard('误差棒图 - 气温测量误差');
+            const ctx = card.querySelector('canvas').getContext('2d');
+
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['第1-5天', '第6-10天', '第11-15天'],
+                    datasets: [{
+                        label: '平均气温',
+                        data: [30.6, 28.8, 22.2],
+                        backgroundColor: 'rgba(255, 107, 107, 0.8)'
+                    }]
+                },
+                options: getChartOptions()
+            });
+            currentCharts.push(chart);
+        }
+
+        // 创建图表卡片
+        function createChartCard(title) {
+            const container = document.getElementById('chartContainer');
+            const card = document.createElement('div');
+            card.className = 'chart-card';
+            card.innerHTML = `
+                <h3>${title}</h3>
+                <div class="chart-container">
+                    <canvas></canvas>
+                </div>
+            `;
+            container.appendChild(card);
+            return card;
+        }
+
+        // 获取图表配置选项
+        function getChartOptions() {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: 'white' } }
+                },
+                scales: {
+                    x: { ticks: { color: 'white' } },
+                    y: { ticks: { color: 'white' } }
+                }
+            };
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initCharts);
+    </script>
+</body>
+</html>

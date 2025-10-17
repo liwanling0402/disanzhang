@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第二章数据可视化平台 - GitHub Pages</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white; margin: 0; padding: 0; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .container { 
+            text-align: center; padding: 40px; max-width: 800px;
+            background: rgba(255,255,255,0.1); border-radius: 15px;
+            backdrop-filter: blur(10px); margin: 20px;
+        }
+        h1 { color: #4ecdc4; font-size: 2.5rem; margin-bottom: 20px; }
+        p { font-size: 1.2rem; line-height: 1.6; margin-bottom: 30px; opacity: 0.9; }
+        .links { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .link-btn { 
+            background: #4ecdc4; color: white; padding: 15px 30px;
+            text-decoration: none; border-radius: 8px; font-size: 1.1rem;
+            transition: all 0.3s ease; border: none; cursor: pointer;
+        }
+        .link-btn:hover { 
+            background: #ff6b6b; transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+        .warning { 
+            background: rgba(255, 107, 107, 0.2); padding: 15px;
+            border-radius: 8px; margin-top: 20px; border-left: 4px solid #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>第二章数据可视化平台</h1>
+        <p>基于真实CSV数据的交互式可视化分析平台</p>
+        
+        <div class="links">
+            <a href="chapter2_real_data_platform.html" class="link-btn">🚀 启动可视化平台</a>
+            <a href="https://github.com/liwanling0402/dierzhang" class="link-btn" target="_blank">📁 查看源代码</a>
+        </div>
+        
+        <div class="warning">
+            <strong>注意：</strong>如果可视化平台无法正常显示，请确保：
+            <ul style="text-align: left; margin-top: 10px;">
+                <li>GitHub Pages已正确配置</li>
+                <li>浏览器允许加载外部资源（Chart.js等）</li>
+                <li>检查浏览器控制台是否有错误信息</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

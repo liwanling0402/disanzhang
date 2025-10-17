@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第二章数据可视化平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e; color: white; min-height: 100vh;
+        }
+        .header {
+            background: rgba(255,255,255,0.1); padding: 20px 0; text-align: center;
+        }
+        .header h1 { font-size: 2rem; margin-bottom: 10px; color: #4ecdc4; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .controls { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .chart-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+        .chart-btn { background: #4ecdc4; border: none; color: white; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        .chart-btn.active { background: #ff6b6b; }
+        .chart-container { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        canvas { width: 100% !important; height: 400px !important; }
+        .chart-info { margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 5px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>第二章数据可视化平台</h1>
+        <p>基于Matplotlib的7种图表类型实现</p>
+    </div>
+
+    <div class="container">
+        <div class="controls">
+            <div class="chart-buttons">
+                <button class="chart-btn active" onclick="showChart('line')">折线图</button>
+                <button class="chart-btn" onclick="showChart('bar')">柱状图</button>
+                <button class="chart-btn" onclick="showChart('pie')">饼图</button>
+                <button class="chart-btn" onclick="showChart('scatter')">散点图</button>
+                <button class="chart-btn" onclick="showChart('area')">面积图</button>
+                <button class="chart-btn" onclick="showChart('histogram')">直方图</button>
+                <button class="chart-btn" onclick="showChart('radar')">雷达图</button>
+                <button class="chart-btn" onclick="showChart('errorbar')">误差棒图</button>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="myChart"></canvas>
+            <div class="chart-info" id="chartInfo"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentChart = null;
+        
+        // 第二章真实数据
+        const data = {
+            temperature: {
+                labels: ['第1天', '第2天', '第3天', '第4天', '第5天', '第6天', '第7天', '第8天', '第9天', '第10天'],
+                datasets: [
+                    { label: '最高气温', data: [32, 33, 34, 34, 33, 31, 30, 29, 30, 29], color: '#ff6b6b' },
+                    { label: '最低气温', data: [19, 19, 20, 22, 22, 21, 22, 16, 18, 18], color: '#4ecdc4' }
+                ]
+            },
+            gmv: {
+                labels: ['2013', '2014', '2015', '2016', '2017', '2018', '2019'],
+                datasets: [
+                    { label: 'GMV (亿元)', data: [10770, 16780, 24440, 30920, 37670, 48200, 57270], color: '#45b7d1' }
+                ]
+            },
+            logistics: {
+                labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+                datasets: [
+                    { label: '公司A', data: [198, 215, 245, 222, 200, 236, 201, 253, 236, 200, 266, 290], color: '#ff6b6b' },
+                    { label: '公司B', data: [203, 236, 200, 236, 269, 216, 298, 333, 301, 349, 360, 368], color: '#4ecdc4' }
+                ]
+            }
+        };
+
+        const chartDescriptions = {
+            line: "📈 折线图 - 实例1：未来15天气温趋势<br>显示连续数据的趋势变化，观察时间序列数据的波动规律",
+            bar: "📊 柱状图 - 实例2：阿里巴巴GMV统计<br>比较不同类别的数值大小，适合分类数据的对比分析",
+            pie: "🥧 饼图 - 实例6：支付宝月账单<br>显示各部分占整体的比例关系，适合展示构成比例",
+            scatter: "🔵 散点图 - 实例7：汽车速度与制动距离<br>显示两个变量之间的关系，适合相关性分析",
+            area: "🟦 面积图 - 实例4：物流费用统计<br>强调数据随时间变化的累积总量，适合趋势分析",
+            histogram: "📋 直方图 - 实例5：人脸识别灰度分布<br>显示数据分布频率，适合分析数据分布特征",
+            radar: "🛰️ 雷达图 - 实例9：霍兰德职业兴趣测试<br>多维数据对比分析，适合展示多个维度的综合表现",
+            errorbar: "📏 误差棒图 - 实例10：细根生物量测量<br>显示数据的变异性，适合科学实验数据分析"
+        };
+
+        function showChart(type) {
+            // 更新按钮状态
+            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 更新图表描述
+            document.getElementById('chartInfo').innerHTML = chartDescriptions[type];
+            
+            // 销毁现有图表
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            const ctx = document.getElementById('myChart').getContext('2d');
+            const datasets = data.temperature;
+            
+            switch(type) {
+                case 'line':
+                    currentChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: datasets.labels,
+                            datasets: datasets.datasets.map(ds => ({
+                                label: ds.label,
+                                data: ds.data,
+                                borderColor: ds.color,
+                                backgroundColor: ds.color + '20',
+                                tension: 0.4,
+                                fill: true
+                            }))
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                    break;
+                    
+                case 'bar':
+                    currentChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.gmv.labels,
+                            datasets: [{
+                                label: data.gmv.datasets[0].label,
+                                data: data.gmv.datasets[0].data,
+                                backgroundColor: data.gmv.datasets[0].color
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                    break;
+                    
+                case 'pie':
+                    currentChart = new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['购物', '餐饮美食', '交通出行', '休闲娱乐', '生活日用', '通信物流', '人情往来', '其他'],
+                            datasets: [{
+                                data: [800, 1000, 200, 200, 300, 200, 100, 200],
+                                backgroundColor: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd', '#96ceb4']
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                    break;
+                    
+                case 'scatter':
+                    currentChart = new Chart(ctx, {
+                        type: 'scatter',
+                        data: {
+                            datasets: [{
+                                label: '制动距离',
+                                data: [
+                                    {x: 10, y: 0.5}, {x: 20, y: 2.0}, {x: 30, y: 4.4}, 
+                                    {x: 40, y: 7.9}, {x: 50, y: 12.3}, {x: 60, y: 17.7},
+                                    {x: 70, y: 24.1}, {x: 80, y: 31.5}, {x: 90, y: 39.9}
+                                ],
+                                backgroundColor: '#4ecdc4',
+                                pointRadius: 6
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                    break;
+                    
+                case 'area':
+                    currentChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.logistics.labels,
+                            datasets: data.logistics.datasets.map(ds => ({
+                                label: ds.label,
+                                data: ds.data,
+                                backgroundColor: ds.color + '40',
+                                borderColor: ds.color,
+                                fill: true,
+                                tension: 0.4
+                            }))
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                    break;
+                    
+                case 'histogram':
+                    currentChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['0-10', '10-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70-80', '80-90', '90-100'],
+                            datasets: [{
+                                label: '像素频率分布',
+                                data: [120, 190, 300, 500, 200, 300, 450, 320, 180, 90],
+                                backgroundColor: '#ff9ff3'
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                    break;
+                    
+                case 'radar':
+                    currentChart = new Chart(ctx, {
+                        type: 'radar',
+                        data: {
+                            labels: ['研究型(I)', '艺术型(A)', '社会型(S)', '企业型(E)', '传统型(C)', '现实型(R)'],
+                            datasets: [{
+                                label: '职业兴趣得分',
+                                data: [0.85, 0.35, 0.30, 0.40, 0.40, 0.30],
+                                backgroundColor: 'rgba(255, 107, 107, 0.2)',
+                                borderColor: '#ff6b6b',
+                                pointBackgroundColor: '#ff6b6b'
+                            }]
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false,
+                            scales: {
+                                r: {
+                                    angleLines: { color: 'rgba(255, 255, 255, 0.3)' },
+                                    grid: { color: 'rgba(255, 255, 255, 0.3)' },
+                                    pointLabels: { color: 'white' },
+                                    ticks: { color: 'white', backdropColor: 'transparent' }
+                                }
+                            }
+                        }
+                    });
+                    break;
+                    
+                case 'errorbar':
+                    currentChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['春季', '夏季', '秋季'],
+                            datasets: [{
+                                label: '树种A',
+                                data: [2.04, 1.57, 1.63],
+                                backgroundColor: 'rgba(255, 107, 107, 0.8)'
+                            }, {
+                                label: '树种B',
+                                data: [1.69, 1.61, 1.64],
+                                backgroundColor: 'rgba(78, 205, 196, 0.8)'
+                            }]
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false
+                        }
+                    });
+                    break;
+            }
+        }
+
+        // 默认显示折线图
+        window.onload = function() {
+            showChart('line');
+        };
+    </script>
+</body>
+</html>

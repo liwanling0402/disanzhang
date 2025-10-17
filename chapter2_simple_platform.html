@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第二章数据可视化平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e; color: white; min-height: 100vh;
+        }
+        .header {
+            background: rgba(255,255,255,0.1); padding: 20px 0; text-align: center;
+        }
+        .header h1 { font-size: 2rem; margin-bottom: 10px; color: #4ecdc4; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .controls { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .chart-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+        .chart-btn { background: #4ecdc4; border: none; color: white; padding: 10px 15px; border-radius: 5px; cursor: pointer; }
+        .chart-btn.active { background: #ff6b6b; }
+        .chart-container { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        canvas { width: 100% !important; height: 400px !important; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>第二章数据可视化平台</h1>
+        <p>基于Matplotlib的图表类型实现</p>
+    </div>
+
+    <div class="container">
+        <div class="controls">
+            <div class="chart-buttons">
+                <button class="chart-btn active" onclick="showChart('line')">折线图</button>
+                <button class="chart-btn" onclick="showChart('bar')">柱状图</button>
+                <button class="chart-btn" onclick="showChart('pie')">饼图</button>
+                <button class="chart-btn" onclick="showChart('scatter')">散点图</button>
+                <button class="chart-btn" onclick="showChart('area')">面积图</button>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let currentChart = null;
+        
+        // 第二章真实数据
+        const data = {
+            temperature: {
+                labels: ['第1天', '第2天', '第3天', '第4天', '第5天', '第6天', '第7天', '第8天', '第9天', '第10天'],
+                datasets: [
+                    { label: '最高气温', data: [32, 33, 34, 34, 33, 31, 30, 29, 30, 29], color: '#ff6b6b' },
+                    { label: '最低气温', data: [19, 19, 20, 22, 22, 21, 22, 16, 18, 18], color: '#4ecdc4' }
+                ]
+            }
+        };
+
+        function showChart(type) {
+            // 更新按钮状态
+            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 销毁现有图表
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            const ctx = document.getElementById('myChart').getContext('2d');
+            const datasets = data.temperature;
+            
+            switch(type) {
+                case 'line':
+                    currentChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: datasets.labels,
+                            datasets: datasets.datasets.map(ds => ({
+                                label: ds.label,
+                                data: ds.data,
+                                borderColor: ds.color,
+                                backgroundColor: ds.color + '20',
+                                tension: 0.4,
+                                fill: true
+                            }))
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                    break;
+                    
+                case 'bar':
+                    currentChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: datasets.labels,
+                            datasets: datasets.datasets.map(ds => ({
+                                label: ds.label,
+                                data: ds.data,
+                                backgroundColor: ds.color
+                            }))
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                    break;
+                    
+                case 'pie':
+                    currentChart = new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['购物', '餐饮', '交通', '娱乐', '其他'],
+                            datasets: [{
+                                data: [800, 1000, 200, 200, 200],
+                                backgroundColor: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#feca57', '#ff9ff3']
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                    break;
+                    
+                case 'scatter':
+                    currentChart = new Chart(ctx, {
+                        type: 'scatter',
+                        data: {
+                            datasets: [{
+                                label: '速度与距离',
+                                data: [
+                                    {x: 10, y: 0.5}, {x: 20, y: 2.0}, {x: 30, y: 4.4}, 
+                                    {x: 40, y: 7.9}, {x: 50, y: 12.3}, {x: 60, y: 17.7}
+                                ],
+                                backgroundColor: '#4ecdc4',
+                                pointRadius: 6
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                    break;
+                    
+                case 'area':
+                    currentChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: datasets.labels,
+                            datasets: datasets.datasets.map(ds => ({
+                                label: ds.label,
+                                data: ds.data,
+                                backgroundColor: ds.color + '40',
+                                borderColor: ds.color,
+                                fill: true,
+                                tension: 0.4
+                            }))
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                    break;
+            }
+        }
+
+        // 默认显示折线图
+        window.onload = function() {
+            showChart('line');
+        };
+    </script>
+</body>
+</html>
