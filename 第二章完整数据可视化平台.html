@@ -1,0 +1,1780 @@
+<<<<<<< HEAD
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第二章完整数据可视化平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white; min-height: 100vh; padding: 20px;
+        }
+        .container { max-width: 1600px; margin: 0 auto; }
+        header { 
+            text-align: center; margin-bottom: 30px; padding: 25px;
+            background: rgba(255,255,255,0.1); border-radius: 15px;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
+        }
+        h1 { 
+            font-size: 2.2rem; margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .chapter-info { 
+            max-width: 900px; margin: 0 auto; line-height: 1.6; opacity: 0.9;
+        }
+        .dashboard { display: grid; grid-template-columns: 280px 1fr; gap: 25px; }
+        .sidebar { 
+            background: rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
+            height: fit-content; max-height: 80vh; overflow-y: auto;
+        }
+        .main-content { 
+            background: rgba(255,255,255,0.1); border-radius: 12px; padding: 25px;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
+        }
+        .section-title { 
+            font-size: 1.3rem; margin-bottom: 15px; color: #4ecdc4;
+            border-bottom: 2px solid rgba(78,205,196,0.3); padding-bottom: 8px;
+        }
+        .dataset-category { margin-bottom: 20px; }
+        .category-title { 
+            font-size: 1.1rem; margin-bottom: 10px; color: #ff6b6b;
+            padding: 5px 10px; background: rgba(255,107,107,0.1); border-radius: 5px;
+        }
+        .dataset-card { 
+            background: rgba(255,255,255,0.15); border-radius: 8px; padding: 12px;
+            margin-bottom: 8px; cursor: pointer; transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        .dataset-card:hover { transform: translateY(-2px); background: rgba(255,255,255,0.2); }
+        .dataset-card.active { border: 2px solid #4ecdc4; background: rgba(78,205,196,0.1); }
+        .dataset-title { font-weight: bold; margin-bottom: 5px; }
+        .dataset-desc { font-size: 0.8rem; opacity: 0.8; }
+        .chart-header { margin-bottom: 20px; }
+        .chart-controls { 
+            display: flex; gap: 8px; margin: 15px 0; flex-wrap: wrap;
+            background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;
+        }
+        .chart-type-btn { 
+            padding: 6px 12px; border: 1px solid #4ecdc4; background: transparent;
+            color: #4ecdc4; border-radius: 4px; cursor: pointer; transition: all 0.3s;
+            font-size: 0.85rem;
+        }
+        .chart-type-btn:hover { background: rgba(78,205,196,0.1); }
+        .chart-type-btn.active { background: #4ecdc4; color: #1e3c72; }
+        .chart-container { 
+            background: rgba(0,0,0,0.3); border-radius: 10px; padding: 20px;
+            margin-bottom: 20px;
+        }
+        .chart-wrapper { position: relative; height: 450px; width: 100%; }
+        canvas { width: 100% !important; height: 100% !important; }
+        .data-info { 
+            background: rgba(255,255,255,0.1); border-radius: 6px; padding: 12px;
+            font-size: 0.85rem; text-align: center; margin-top: 15px;
+        }
+        .chart-description { 
+            background: rgba(255,255,255,0.05); border-radius: 8px; padding: 15px;
+            margin-top: 15px; font-size: 0.9rem; line-height: 1.5;
+        }
+        .features-grid { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px; margin-top: 25px;
+        }
+        .feature-card { 
+            background: rgba(255,255,255,0.1); border-radius: 8px; padding: 15px;
+            text-align: center; border-left: 3px solid #4ecdc4;
+        }
+        .feature-title { font-weight: bold; margin-bottom: 5px; color: #4ecdc4; }
+        @media (max-width: 1024px) { .dashboard { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { 
+            .chart-controls { justify-content: center; }
+            h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>第二章完整数据可视化平台</h1>
+            <p class="chapter-info">基于《数据可视化》第二章10种基础图表类型的完整交互式展示平台，包含所有教学实例数据</p>
+        </header>
+        
+        <div class="dashboard">
+            <div class="sidebar">
+                <h3 class="section-title">📚 第二章图表类型</h3>
+                
+                <div class="dataset-category">
+                    <div class="category-title">📈 折线图 (2.1)</div>
+                    <div class="dataset-card" data-key="temperatureData">
+                        <div class="dataset-title">未来15天气温趋势</div>
+                        <div class="dataset-desc">最高气温和最低气温变化趋势</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">📊 柱形图 (2.2)</div>
+                    <div class="dataset-card" data-key="alibabaGMVData">
+                        <div class="dataset-title">阿里巴巴GMV统计</div>
+                        <div class="dataset-desc">2013-2019财年GMV增长趋势</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">📋 条形图 (2.3)</div>
+                    <div class="dataset-card" data-key="shoppingRateData">
+                        <div class="dataset-title">网购替代率</div>
+                        <div class="dataset-desc">各商品种类网购替代率对比</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">🟦 面积图 (2.4)</div>
+                    <div class="dataset-card" data-key="logisticsData">
+                        <div class="dataset-title">物流费用统计</div>
+                        <div class="dataset-desc">三家物流公司各月费用</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">📊 直方图 (2.5)</div>
+                    <div class="dataset-card" data-key="histogramData">
+                        <div class="dataset-title">人脸识别灰度直方图</div>
+                        <div class="dataset-desc">10000个随机数的分布</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">🥧 饼图 (2.6)</div>
+                    <div class="dataset-card" data-key="alipayData">
+                        <div class="dataset-title">支付宝月账单</div>
+                        <div class="dataset-desc">各类消费占比分析</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">🔵 散点图 (2.7)</div>
+                    <div class="dataset-card" data-key="carSpeedData">
+                        <div class="dataset-title">汽车制动距离</div>
+                        <div class="dataset-desc">速度与制动距离关系</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">📦 箱形图 (2.8)</div>
+                    <div class="dataset-card" data-key="powerGenerationData">
+                        <div class="dataset-title">全国发电量统计</div>
+                        <div class="dataset-desc">2017-2018年发电量对比</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">🛰️ 雷达图 (2.9)</div>
+                    <div class="dataset-card" data-key="hollandData">
+                        <div class="dataset-title">霍兰德职业测试</div>
+                        <div class="dataset-desc">6种职业兴趣类型分析</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">📏 误差棒图 (2.10)</div>
+                    <div class="dataset-card" data-key="rootBiomassData">
+                        <div class="dataset-title">细根生物量</div>
+                        <div class="dataset-desc">4个树种不同季节统计</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div class="chart-header">
+                    <h3 id="chartTitle">请选择图表类型开始可视化</h3>
+                    
+                    <div class="chart-controls" id="chartControls" style="display:none;">
+                        <button class="chart-type-btn active" data-type="line">折线图</button>
+                        <button class="chart-type-btn" data-type="bar">柱状图</button>
+                        <button class="chart-type-btn" data-type="pie">饼图</button>
+                        <button class="chart-type-btn" data-type="scatter">散点图</button>
+                        <button class="chart-type-btn" data-type="area">面积图</button>
+                        <button class="chart-type-btn" data-type="radar">雷达图</button>
+                        <button class="chart-type-btn" data-type="box">箱形图</button>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-wrapper">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                    
+                    <div class="data-info">
+                        <div id="dataInfo">共 0 条数据 | 当前图表类型: 未选择</div>
+                    </div>
+                </div>
+                
+                <div class="chart-description" id="chartDescription" style="display:none;">
+                    <h4>📋 图表说明</h4>
+                    <p id="chartDescText">选择数据集后显示详细说明</p>
+                </div>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-title">完整覆盖</div>
+                        <p>包含第二章所有10种基础图表类型</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title">真实数据</div>
+                        <p>基于教材中的实际教学案例数据</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title">交互体验</div>
+                        <p>支持动态切换图表类型和数据集</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title">响应式设计</div>
+                        <p>适配各种设备屏幕尺寸</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 第二章完整数据集 - 第一部分
+        const chapter2Data = {
+            // 2.1 折线图 - 未来15天气温趋势
+            temperatureData: {
+                title: '未来15天最高气温和最低气温',
+                description: '展示未来15天的最高气温和最低气温变化趋势',
+                chartDescription: '折线图适合展示连续数据的变化趋势，可以清晰看到气温的波动规律和极值点。',
+                data: [
+                    { day: '第1天', maxTemp: 32, minTemp: 19 },
+                    { day: '第2天', maxTemp: 33, minTemp: 19 },
+                    { day: '第3天', maxTemp: 34, minTemp: 20 },
+                    { day: '第4天', maxTemp: 34, minTemp: 22 },
+                    { day: '第5天', maxTemp: 33, minTemp: 22 },
+                    { day: '第6天', maxTemp: 31, minTemp: 21 },
+                    { day: '第7天', maxTemp: 30, minTemp: 22 },
+                    { day: '第8天', maxTemp: 29, minTemp: 16 },
+                    { day: '第9天', maxTemp: 30, minTemp: 18 },
+                    { day: '第10天', maxTemp: 29, minTemp: 18 },
+                    { day: '第11天', maxTemp: 26, minTemp: 17 },
+                    { day: '第12天', maxTemp: 23, minTemp: 14 },
+                    { day: '第13天', maxTemp: 21, minTemp: 15 },
+                    { day: '第14天', maxTemp: 25, minTemp: 16 },
+                    { day: '第15天', maxTemp: 31, minTemp: 16 }
+                ]
+            },
+            
+            // 2.2 柱形图 - 阿里巴巴GMV统计
+            alibabaGMVData: {
+                title: '2013-2019财年阿里巴巴GMV',
+                description: '展示2013-2019财年阿里巴巴淘宝和天猫平台GMV的增长趋势',
+                chartDescription: '柱状图适合比较不同年份的数值大小，可以直观看到GMV的快速增长趋势。',
+                data: [
+                    { year: '2013', gmv: 10770 },
+                    { year: '2014', gmv: 16780 },
+                    { year: '2015', gmv: 24440 },
+                    { year: '2016', gmv: 30920 },
+                    { year: '2017', gmv: 37670 },
+                    { year: '2018', gmv: 48200 },
+                    { year: '2019', gmv: 57270 }
+                ]
+            },
+            
+            // 2.3 条形图 - 网购替代率
+            shoppingRateData: {
+                title: '各商品种类网购替代率',
+                description: '展示不同商品种类在网购中的替代率对比',
+                chartDescription: '条形图适合横向比较分类数据的大小，可以清晰看到不同商品种类的网购普及程度。',
+                data: [
+                    { category: '家政服务', rate: 0.959 },
+                    { category: '机票火车票', rate: 0.951 },
+                    { category: '家具', rate: 0.935 },
+                    { category: '手机配件', rate: 0.924 },
+                    { category: '计算机产品', rate: 0.893 },
+                    { category: '汽车用品', rate: 0.892 },
+                    { category: '通信充值', rate: 0.865 }
+                ]
+            },
+            
+            // 2.4 面积图 - 物流费用统计
+            logisticsData: {
+                title: '物流公司费用统计',
+                description: '展示三家物流公司各月的物流费用统计',
+                chartDescription: '面积图适合展示多组数据的累积效果，可以比较不同公司的费用趋势和总量。',
+                data: [
+                    { month: '1月', companyA: 198, companyB: 203, companyC: 185 },
+                    { month: '2月', companyA: 215, companyB: 236, companyC: 205 },
+                    { month: '3月', companyA: 245, companyB: 200, companyC: 226 },
+                    { month: '4月', companyA: 222, companyB: 236, companyC: 199 },
+                    { month: '5月', companyA: 200, companyB: 269, companyC: 238 },
+                    { month: '6月', companyA: 236, companyB: 216, companyC: 200 },
+                    { month: '7月', companyA: 201, companyB: 298, companyC: 250 },
+                    { month: '8月', companyA: 253, companyB: 333, companyC: 209 },
+                    { month: '9月', companyA: 236, companyB: 301, companyC: 246 },
+                    { month: '10月', companyA: 200, companyB: 349, companyC: 219 },
+                    { month: '11月', companyA: 266, companyB: 360, companyC: 253 },
+                    { month: '12月', companyA: 290, companyB: 368, companyC: 288 }
+                ]
+            },
+            
+            // 2.5 直方图 - 人脸识别灰度直方图
+            histogramData: {
+                title: '人脸识别灰度直方图',
+                description: '展示10000个随机数的分布情况',
+                chartDescription: '直方图适合展示数据的分布情况，可以看到数据的集中趋势和离散程度。',
+                data: Array.from({length: 25}, (_, i) => ({
+                    bin: `区间${i+1}`,
+                    value: Math.floor(Math.random() * 500) + 200
+                }))
+            },
+            
+            // 2.6 饼图 - 支付宝月账单
+            alipayData: {
+                title: '支付宝月账单报告',
+                description: '展示支付宝月账单中各类消费的占比情况',
+                chartDescription: '饼图适合显示各部分占整体的比例关系，可以清晰看到不同消费类别的占比。',
+                data: [
+                    { category: '购物', amount: 800, percentage: 26.7 },
+                    { category: '人情往来', amount: 100, percentage: 3.3 },
+                    { category: '餐饮美食', amount: 1000, percentage: 33.3 },
+                    { category: '通信物流', amount: 200, percentage: 6.7 },
+                    { category: '生活日用', amount: 300, percentage: 10.0 },
+                    { category: '交通出行', amount: 200, percentage: 6.7 },
+                    { category: '休闲娱乐', amount: 200, percentage: 6.7 },
+                    { category: '其他', amount: 200, percentage: 6.7 }
+                ]
+            },
+            
+            // 2.7 散点图 - 汽车速度与制动距离
+            carSpeedData: {
+                title: '汽车速度与制动距离',
+                description: '展示汽车在不同速度下的制动距离关系',
+                chartDescription: '散点图适合分析两个变量之间的相关性，可以清楚看到速度与制动距离的正相关关系。',
+                data: [
+                    { speed: 10, distance: 0.5 },
+                    { speed: 20, distance: 2.0 },
+                    { speed: 30, distance: 4.4 },
+                    { speed: 40, distance: 7.9 },
+                    { speed: 50, distance: 12.3 },
+                    { speed: 60, distance: 17.7 },
+                    { speed: 70, distance: 24.1 },
+                    { speed: 80, distance: 31.5 },
+                    { speed: 90, distance: 39.9 },
+                    { speed: 100, distance: 49.2 }
+                ]
+            },
+            
+            // 2.8 箱形图 - 全国发电量统计
+            powerGenerationData: {
+                title: '全国发电量统计',
+                description: '展示2017年和2018年全国各月发电量对比',
+                chartDescription: '箱形图适合展示数据的分布情况，可以比较不同年份发电量的中位数、四分位数和异常值。',
+                data: [
+                    { month: '1月', year2018: 5200, year2017: 4605 },
+                    { month: '2月', year2018: 5254, year2017: 4710 },
+                    { month: '3月', year2018: 5283, year2017: 5169 },
+                    { month: '4月', year2018: 5107, year2017: 4767 },
+                    { month: '5月', year2018: 5443, year2017: 4947 },
+                    { month: '6月', year2018: 5550, year2017: 5203 },
+                    { month: '7月', year2018: 6400, year2017: 6047 },
+                    { month: '8月', year2018: 6404, year2017: 5945 },
+                    { month: '9月', year2018: 5483, year2017: 5219 },
+                    { month: '10月', year2018: 5330, year2017: 5038 },
+                    { month: '11月', year2018: 5543, year2017: 5196 },
+                    { month: '12月', year2018: 6199, year2017: 5698 }
+                ]
+            },
+            
+            // 2.9 雷达图 - 霍兰德职业兴趣测试
+            hollandData: {
+                title: '霍兰德职业兴趣测试',
+                description: '展示6种职业兴趣类型的测试结果',
+                chartDescription: '雷达图适合展示多维数据的相对关系，可以清晰看到不同职业兴趣类型的优势领域。',
+                data: [
+                    { type: '研究型(I)', score: 40 },
+                    { type: '艺术型(A)', score: 85 },
+                    { type: '社会型(S)', score: 43 },
+                    { type: '企业型(E)', score: 30 },
+                    { type: '传统型(C)', score: 20 },
+                    { type: '现实型(R)', score: 34 }
+                ]
+            },
+            
+            // 2.10 误差棒图 - 细根生物量
+            rootBiomassData: {
+                title: '细根生物量统计',
+                description: '展示4个树种不同季节的细根生物量',
+                chartDescription: '误差棒图适合展示数据的测量精度和变异程度，可以比较不同条件下的数据稳定性。',
+                data: [
+                    { season: '春季', tree1: 2.04, tree2: 1.69, tree3: 4.65, tree4: 3.39 },
+                    { season: '夏季', tree1: 1.57, tree2: 1.61, tree3: 4.99, tree4: 2.33 },
+                    { season: '秋季', tree1: 1.63, tree2: 1.64, tree3: 4.94, tree4: 4.10 }
+                ]
+            }
+        };
+
+        let currentChart = null;
+        let currentDataset = null;
+        let currentChartType = 'line';
+
+        // 页面初始化
+        function initPage() {
+            setupDatasetCards();
+            setupChartControls();
+        }
+
+        // 设置数据集卡片事件
+        function setupDatasetCards() {
+            document.querySelectorAll('.dataset-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    const key = e.currentTarget.dataset.key;
+                    selectDataset(key, chapter2Data[key]);
+                });
+            });
+        }
+
+        // 选择数据集
+        function selectDataset(key, dataset) {
+            currentDataset = { key, ...dataset };
+            
+            // 更新UI状态
+            document.querySelectorAll('.dataset-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // 显示图表控制
+            document.getElementById('chartControls').style.display = 'flex';
+            document.getElementById('chartTitle').textContent = dataset.title;
+            document.getElementById('chartDescription').style.display = 'block';
+            document.getElementById('chartDescText').textContent = dataset.chartDescription;
+            
+            // 根据数据类型自动选择图表类型
+            const autoChartType = getAutoChartType(key);
+            currentChartType = autoChartType;
+            updateChartTypeButtons();
+            
+            renderChart();
+        }
+
+        // 根据数据集类型自动选择图表类型
+        function getAutoChartType(datasetKey) {
+            const typeMap = {
+                temperatureData: 'line',
+                alibabaGMVData: 'bar',
+                shoppingRateData: 'bar',
+                logisticsData: 'area',
+                histogramData: 'bar',
+                alipayData: 'pie',
+                carSpeedData: 'scatter',
+                powerGenerationData: 'box',
+                hollandData: 'radar',
+                rootBiomassData: 'bar'
+            };
+            return typeMap[datasetKey] || 'line';
+        }
+
+        // 设置图表类型控制
+        function setupChartControls() {
+            document.querySelectorAll('.chart-type-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    currentChartType = e.target.dataset.type;
+                    updateChartTypeButtons();
+                    renderChart();
+                });
+            });
+        }
+
+        // 更新图表类型按钮状态
+        function updateChartTypeButtons() {
+            document.querySelectorAll('.chart-type-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.type === currentChartType);
+            });
+        }
+
+        // 渲染图表
+        function renderChart() {
+            if (!currentDataset) return;
+            
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            
+            // 销毁现有图表
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            const config = getChartConfig(currentDataset, currentChartType);
+            currentChart = new Chart(ctx, config);
+            
+            updateDataInfo();
+        }
+
+        // 获取图表配置
+        function getChartConfig(dataset, chartType) {
+            const commonConfig = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'white',
+                            font: { size: 11 }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        borderWidth: 1
+                    }
+                }
+            };
+
+            switch (chartType) {
+                case 'line':
+                    return getLineChartConfig(dataset, commonConfig);
+                case 'bar':
+                    return getBarChartConfig(dataset, commonConfig);
+                case 'pie':
+                    return getPieChartConfig(dataset, commonConfig);
+                case 'scatter':
+                    return getScatterChartConfig(dataset, commonConfig);
+                case 'area':
+                    return getAreaChartConfig(dataset, commonConfig);
+                case 'radar':
+                    return getRadarChartConfig(dataset, commonConfig);
+                case 'box':
+                    return getBoxChartConfig(dataset, commonConfig);
+                default:
+                    return getLineChartConfig(dataset, commonConfig);
+            }
+        }
+
+        // 折线图配置
+        function getLineChartConfig(dataset, commonConfig) {
+            const labels = dataset.data.map(item => item.day || item.month || item.season);
+            const datasets = [];
+            
+            if (dataset.key === 'temperatureData') {
+                datasets.push({
+                    label: '最高气温',
+                    data: dataset.data.map(item => item.maxTemp),
+                    borderColor: '#FF6B6B',
+                    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                });
+                datasets.push({
+                    label: '最低气温',
+                    data: dataset.data.map(item => item.minTemp),
+                    borderColor: '#4ECDC4',
+                    backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                });
+            } else {
+                const numericKeys = Object.keys(dataset.data[0]).filter(key => 
+                    typeof dataset.data[0][key] === 'number' && key !== 'rate' && key !== 'percentage'
+                );
+                
+                numericKeys.forEach((key, index) => {
+                    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
+                    datasets.push({
+                        label: key.includes('company') ? key.replace('company', '公司') : key,
+                        data: dataset.data.map(item => item[key]),
+                        borderColor: colors[index % colors.length],
+                        backgroundColor: colors[index % colors.length] + '20',
+                        tension: 0.4
+                    });
+                });
+            }
+            
+            return {
+                ...commonConfig,
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    ...commonConfig,
+                    scales: {
+                        x: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 柱状图配置
+        function getBarChartConfig(dataset, commonConfig) {
+            const labels = dataset.data.map(item => 
+                item.year || item.category || item.bin || item.season || item.month
+            );
+            const datasets = [];
+            
+            if (dataset.key === 'alibabaGMVData') {
+                datasets.push({
+                    label: 'GMV (亿元)',
+                    data: dataset.data.map(item => item.gmv),
+                    backgroundColor: 'rgba(255, 107, 107, 0.8)',
+                    borderColor: '#FF6B6B',
+                    borderWidth: 1
+                });
+            } else if (dataset.key === 'shoppingRateData') {
+                datasets.push({
+                    label: '替代率(%)',
+                    data: dataset.data.map(item => item.rate * 100),
+                    backgroundColor: 'rgba(78, 205, 196, 0.8)',
+                    borderColor: '#4ECDC4',
+                    borderWidth: 1
+                });
+            } else if (dataset.key === 'histogramData') {
+                datasets.push({
+                    label: '频数',
+                    data: dataset.data.map(item => item.value),
+                    backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                    borderColor: '#667eea',
+                    borderWidth: 1
+                });
+            }
+            
+            return {
+                ...commonConfig,
+                type: 'bar',
+                data: { labels, datasets },
+                options: {
+                    ...commonConfig,
+                    scales: {
+                        x: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 饼图配置
+        function getPieChartConfig(dataset, commonConfig) {
+            const labels = dataset.data.map(item => item.category);
+            const data = dataset.data.map(item => item.amount || item.percentage);
+            
+            return {
+                ...commonConfig,
+                type: 'pie',
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        backgroundColor: [
+                            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+                            '#DDA0DD', '#98D8C8', '#F8B195'
+                        ],
+                        borderWidth: 2,
+                        borderColor: 'rgba(255, 255, 255, 0.3)'
+                    }]
+                }
+            };
+        }
+
+        // 散点图配置
+        function getScatterChartConfig(dataset, commonConfig) {
+            const data = dataset.data.map(item => ({
+                x: item.speed,
+                y: item.distance
+            }));
+            
+            return {
+                ...commonConfig,
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '速度 vs 制动距离',
+                        data,
+                        backgroundColor: 'rgba(78, 205, 196, 0.8)',
+                        borderColor: '#4ECDC4',
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    ...commonConfig,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '速度 (km/h)',
+                                color: 'white'
+                            },
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '制动距离 (m)',
+                                color: 'white'
+                            },
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 面积图配置
+        function getAreaChartConfig(dataset, commonConfig) {
+            const labels = dataset.data.map(item => item.month);
+            const datasets = [
+                {
+                    label: '公司A',
+                    data: dataset.data.map(item => item.companyA),
+                    backgroundColor: 'rgba(255, 107, 107, 0.3)',
+                    borderColor: '#FF6B6B',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: '公司B',
+                    data: dataset.data.map(item => item.companyB),
+                    backgroundColor: 'rgba(78, 205, 196, 0.3)',
+                    borderColor: '#4ECDC4',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: '公司C',
+                    data: dataset.data.map(item => item.companyC),
+                    backgroundColor: 'rgba(69, 183, 209, 0.3)',
+                    borderColor: '#45B7D1',
+                    tension: 0.4,
+                    fill: true
+                }
+            ];
+            
+            return {
+                ...commonConfig,
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    ...commonConfig,
+                    scales: {
+                        x: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 雷达图配置
+        function getRadarChartConfig(dataset, commonConfig) {
+            const labels = dataset.data.map(item => item.type);
+            const data = dataset.data.map(item => item.score);
+            
+            return {
+                ...commonConfig,
+                type: 'radar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: '职业兴趣得分',
+                        data,
+                        backgroundColor: 'rgba(78, 205, 196, 0.2)',
+                        borderColor: '#4ECDC4',
+                        pointBackgroundColor: '#4ECDC4',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#4ECDC4'
+                    }]
+                },
+                options: {
+                    ...commonConfig,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: { color: 'white' },
+                            ticks: { color: 'white', backdropColor: 'transparent' }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 箱形图配置（简化版，使用柱状图替代）
+        function getBoxChartConfig(dataset, commonConfig) {
+            const labels = dataset.data.map(item => item.month);
+            const datasets = [
+                {
+                    label: '2018年发电量',
+                    data: dataset.data.map(item => item.year2018),
+                    backgroundColor: 'rgba(255, 107, 107, 0.8)',
+                    borderColor: '#FF6B6B',
+                    borderWidth: 1
+                },
+                {
+                    label: '2017年发电量',
+                    data: dataset.data.map(item => item.year2017),
+                    backgroundColor: 'rgba(78, 205, 196, 0.8)',
+                    borderColor: '#4ECDC4',
+                    borderWidth: 1
+                }
+            ];
+            
+            return {
+                ...commonConfig,
+                type: 'bar',
+                data: { labels, datasets },
+                options: {
+                    ...commonConfig,
+                    scales: {
+                        x: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 更新数据信息
+        function updateDataInfo() {
+            if (!currentDataset) return;
+            const dataCount = currentDataset.data.length;
+            document.getElementById('dataInfo').textContent = 
+                `共 ${dataCount} 条数据 | 当前图表类型: ${getChartTypeName(currentChartType)}`;
+        }
+
+        // 获取图表类型中文名称
+        function getChartTypeName(type) {
+            const names = {
+                line: '折线图',
+                bar: '柱状图',
+                pie: '饼图',
+                scatter: '散点图',
+                area: '面积图',
+                radar: '雷达图',
+                box: '箱形图'
+            };
+            return names[type] || type;
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+=======
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第二章完整数据可视化平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white; min-height: 100vh; padding: 20px;
+        }
+        .container { max-width: 1600px; margin: 0 auto; }
+        header { 
+            text-align: center; margin-bottom: 30px; padding: 25px;
+            background: rgba(255,255,255,0.1); border-radius: 15px;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
+        }
+        h1 { 
+            font-size: 2.2rem; margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .chapter-info { 
+            max-width: 900px; margin: 0 auto; line-height: 1.6; opacity: 0.9;
+        }
+        .dashboard { display: grid; grid-template-columns: 280px 1fr; gap: 25px; }
+        .sidebar { 
+            background: rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
+            height: fit-content; max-height: 80vh; overflow-y: auto;
+        }
+        .main-content { 
+            background: rgba(255,255,255,0.1); border-radius: 12px; padding: 25px;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
+        }
+        .section-title { 
+            font-size: 1.3rem; margin-bottom: 15px; color: #4ecdc4;
+            border-bottom: 2px solid rgba(78,205,196,0.3); padding-bottom: 8px;
+        }
+        .dataset-category { margin-bottom: 20px; }
+        .category-title { 
+            font-size: 1.1rem; margin-bottom: 10px; color: #ff6b6b;
+            padding: 5px 10px; background: rgba(255,107,107,0.1); border-radius: 5px;
+        }
+        .dataset-card { 
+            background: rgba(255,255,255,0.15); border-radius: 8px; padding: 12px;
+            margin-bottom: 8px; cursor: pointer; transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        .dataset-card:hover { transform: translateY(-2px); background: rgba(255,255,255,0.2); }
+        .dataset-card.active { border: 2px solid #4ecdc4; background: rgba(78,205,196,0.1); }
+        .dataset-title { font-weight: bold; margin-bottom: 5px; }
+        .dataset-desc { font-size: 0.8rem; opacity: 0.8; }
+        .chart-header { margin-bottom: 20px; }
+        .chart-controls { 
+            display: flex; gap: 8px; margin: 15px 0; flex-wrap: wrap;
+            background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;
+        }
+        .chart-type-btn { 
+            padding: 6px 12px; border: 1px solid #4ecdc4; background: transparent;
+            color: #4ecdc4; border-radius: 4px; cursor: pointer; transition: all 0.3s;
+            font-size: 0.85rem;
+        }
+        .chart-type-btn:hover { background: rgba(78,205,196,0.1); }
+        .chart-type-btn.active { background: #4ecdc4; color: #1e3c72; }
+        .chart-container { 
+            background: rgba(0,0,0,0.3); border-radius: 10px; padding: 20px;
+            margin-bottom: 20px;
+        }
+        .chart-wrapper { position: relative; height: 450px; width: 100%; }
+        canvas { width: 100% !important; height: 100% !important; }
+        .data-info { 
+            background: rgba(255,255,255,0.1); border-radius: 6px; padding: 12px;
+            font-size: 0.85rem; text-align: center; margin-top: 15px;
+        }
+        .chart-description { 
+            background: rgba(255,255,255,0.05); border-radius: 8px; padding: 15px;
+            margin-top: 15px; font-size: 0.9rem; line-height: 1.5;
+        }
+        .features-grid { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px; margin-top: 25px;
+        }
+        .feature-card { 
+            background: rgba(255,255,255,0.1); border-radius: 8px; padding: 15px;
+            text-align: center; border-left: 3px solid #4ecdc4;
+        }
+        .feature-title { font-weight: bold; margin-bottom: 5px; color: #4ecdc4; }
+        @media (max-width: 1024px) { .dashboard { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { 
+            .chart-controls { justify-content: center; }
+            h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>第二章完整数据可视化平台</h1>
+            <p class="chapter-info">基于《数据可视化》第二章10种基础图表类型的完整交互式展示平台，包含所有教学实例数据</p>
+        </header>
+        
+        <div class="dashboard">
+            <div class="sidebar">
+                <h3 class="section-title">📚 第二章图表类型</h3>
+                
+                <div class="dataset-category">
+                    <div class="category-title">📈 折线图 (2.1)</div>
+                    <div class="dataset-card" data-key="temperatureData">
+                        <div class="dataset-title">未来15天气温趋势</div>
+                        <div class="dataset-desc">最高气温和最低气温变化趋势</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">📊 柱形图 (2.2)</div>
+                    <div class="dataset-card" data-key="alibabaGMVData">
+                        <div class="dataset-title">阿里巴巴GMV统计</div>
+                        <div class="dataset-desc">2013-2019财年GMV增长趋势</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">📋 条形图 (2.3)</div>
+                    <div class="dataset-card" data-key="shoppingRateData">
+                        <div class="dataset-title">网购替代率</div>
+                        <div class="dataset-desc">各商品种类网购替代率对比</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">🟦 面积图 (2.4)</div>
+                    <div class="dataset-card" data-key="logisticsData">
+                        <div class="dataset-title">物流费用统计</div>
+                        <div class="dataset-desc">三家物流公司各月费用</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">📊 直方图 (2.5)</div>
+                    <div class="dataset-card" data-key="histogramData">
+                        <div class="dataset-title">人脸识别灰度直方图</div>
+                        <div class="dataset-desc">10000个随机数的分布</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">🥧 饼图 (2.6)</div>
+                    <div class="dataset-card" data-key="alipayData">
+                        <div class="dataset-title">支付宝月账单</div>
+                        <div class="dataset-desc">各类消费占比分析</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">🔵 散点图 (2.7)</div>
+                    <div class="dataset-card" data-key="carSpeedData">
+                        <div class="dataset-title">汽车制动距离</div>
+                        <div class="dataset-desc">速度与制动距离关系</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">📦 箱形图 (2.8)</div>
+                    <div class="dataset-card" data-key="powerGenerationData">
+                        <div class="dataset-title">全国发电量统计</div>
+                        <div class="dataset-desc">2017-2018年发电量对比</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">🛰️ 雷达图 (2.9)</div>
+                    <div class="dataset-card" data-key="hollandData">
+                        <div class="dataset-title">霍兰德职业测试</div>
+                        <div class="dataset-desc">6种职业兴趣类型分析</div>
+                    </div>
+                </div>
+                
+                <div class="dataset-category">
+                    <div class="category-title">📏 误差棒图 (2.10)</div>
+                    <div class="dataset-card" data-key="rootBiomassData">
+                        <div class="dataset-title">细根生物量</div>
+                        <div class="dataset-desc">4个树种不同季节统计</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div class="chart-header">
+                    <h3 id="chartTitle">请选择图表类型开始可视化</h3>
+                    
+                    <div class="chart-controls" id="chartControls" style="display:none;">
+                        <button class="chart-type-btn active" data-type="line">折线图</button>
+                        <button class="chart-type-btn" data-type="bar">柱状图</button>
+                        <button class="chart-type-btn" data-type="pie">饼图</button>
+                        <button class="chart-type-btn" data-type="scatter">散点图</button>
+                        <button class="chart-type-btn" data-type="area">面积图</button>
+                        <button class="chart-type-btn" data-type="radar">雷达图</button>
+                        <button class="chart-type-btn" data-type="box">箱形图</button>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-wrapper">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                    
+                    <div class="data-info">
+                        <div id="dataInfo">共 0 条数据 | 当前图表类型: 未选择</div>
+                    </div>
+                </div>
+                
+                <div class="chart-description" id="chartDescription" style="display:none;">
+                    <h4>📋 图表说明</h4>
+                    <p id="chartDescText">选择数据集后显示详细说明</p>
+                </div>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-title">完整覆盖</div>
+                        <p>包含第二章所有10种基础图表类型</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title">真实数据</div>
+                        <p>基于教材中的实际教学案例数据</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title">交互体验</div>
+                        <p>支持动态切换图表类型和数据集</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title">响应式设计</div>
+                        <p>适配各种设备屏幕尺寸</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 第二章完整数据集 - 第一部分
+        const chapter2Data = {
+            // 2.1 折线图 - 未来15天气温趋势
+            temperatureData: {
+                title: '未来15天最高气温和最低气温',
+                description: '展示未来15天的最高气温和最低气温变化趋势',
+                chartDescription: '折线图适合展示连续数据的变化趋势，可以清晰看到气温的波动规律和极值点。',
+                data: [
+                    { day: '第1天', maxTemp: 32, minTemp: 19 },
+                    { day: '第2天', maxTemp: 33, minTemp: 19 },
+                    { day: '第3天', maxTemp: 34, minTemp: 20 },
+                    { day: '第4天', maxTemp: 34, minTemp: 22 },
+                    { day: '第5天', maxTemp: 33, minTemp: 22 },
+                    { day: '第6天', maxTemp: 31, minTemp: 21 },
+                    { day: '第7天', maxTemp: 30, minTemp: 22 },
+                    { day: '第8天', maxTemp: 29, minTemp: 16 },
+                    { day: '第9天', maxTemp: 30, minTemp: 18 },
+                    { day: '第10天', maxTemp: 29, minTemp: 18 },
+                    { day: '第11天', maxTemp: 26, minTemp: 17 },
+                    { day: '第12天', maxTemp: 23, minTemp: 14 },
+                    { day: '第13天', maxTemp: 21, minTemp: 15 },
+                    { day: '第14天', maxTemp: 25, minTemp: 16 },
+                    { day: '第15天', maxTemp: 31, minTemp: 16 }
+                ]
+            },
+            
+            // 2.2 柱形图 - 阿里巴巴GMV统计
+            alibabaGMVData: {
+                title: '2013-2019财年阿里巴巴GMV',
+                description: '展示2013-2019财年阿里巴巴淘宝和天猫平台GMV的增长趋势',
+                chartDescription: '柱状图适合比较不同年份的数值大小，可以直观看到GMV的快速增长趋势。',
+                data: [
+                    { year: '2013', gmv: 10770 },
+                    { year: '2014', gmv: 16780 },
+                    { year: '2015', gmv: 24440 },
+                    { year: '2016', gmv: 30920 },
+                    { year: '2017', gmv: 37670 },
+                    { year: '2018', gmv: 48200 },
+                    { year: '2019', gmv: 57270 }
+                ]
+            },
+            
+            // 2.3 条形图 - 网购替代率
+            shoppingRateData: {
+                title: '各商品种类网购替代率',
+                description: '展示不同商品种类在网购中的替代率对比',
+                chartDescription: '条形图适合横向比较分类数据的大小，可以清晰看到不同商品种类的网购普及程度。',
+                data: [
+                    { category: '家政服务', rate: 0.959 },
+                    { category: '机票火车票', rate: 0.951 },
+                    { category: '家具', rate: 0.935 },
+                    { category: '手机配件', rate: 0.924 },
+                    { category: '计算机产品', rate: 0.893 },
+                    { category: '汽车用品', rate: 0.892 },
+                    { category: '通信充值', rate: 0.865 }
+                ]
+            },
+            
+            // 2.4 面积图 - 物流费用统计
+            logisticsData: {
+                title: '物流公司费用统计',
+                description: '展示三家物流公司各月的物流费用统计',
+                chartDescription: '面积图适合展示多组数据的累积效果，可以比较不同公司的费用趋势和总量。',
+                data: [
+                    { month: '1月', companyA: 198, companyB: 203, companyC: 185 },
+                    { month: '2月', companyA: 215, companyB: 236, companyC: 205 },
+                    { month: '3月', companyA: 245, companyB: 200, companyC: 226 },
+                    { month: '4月', companyA: 222, companyB: 236, companyC: 199 },
+                    { month: '5月', companyA: 200, companyB: 269, companyC: 238 },
+                    { month: '6月', companyA: 236, companyB: 216, companyC: 200 },
+                    { month: '7月', companyA: 201, companyB: 298, companyC: 250 },
+                    { month: '8月', companyA: 253, companyB: 333, companyC: 209 },
+                    { month: '9月', companyA: 236, companyB: 301, companyC: 246 },
+                    { month: '10月', companyA: 200, companyB: 349, companyC: 219 },
+                    { month: '11月', companyA: 266, companyB: 360, companyC: 253 },
+                    { month: '12月', companyA: 290, companyB: 368, companyC: 288 }
+                ]
+            },
+            
+            // 2.5 直方图 - 人脸识别灰度直方图
+            histogramData: {
+                title: '人脸识别灰度直方图',
+                description: '展示10000个随机数的分布情况',
+                chartDescription: '直方图适合展示数据的分布情况，可以看到数据的集中趋势和离散程度。',
+                data: Array.from({length: 25}, (_, i) => ({
+                    bin: `区间${i+1}`,
+                    value: Math.floor(Math.random() * 500) + 200
+                }))
+            },
+            
+            // 2.6 饼图 - 支付宝月账单
+            alipayData: {
+                title: '支付宝月账单报告',
+                description: '展示支付宝月账单中各类消费的占比情况',
+                chartDescription: '饼图适合显示各部分占整体的比例关系，可以清晰看到不同消费类别的占比。',
+                data: [
+                    { category: '购物', amount: 800, percentage: 26.7 },
+                    { category: '人情往来', amount: 100, percentage: 3.3 },
+                    { category: '餐饮美食', amount: 1000, percentage: 33.3 },
+                    { category: '通信物流', amount: 200, percentage: 6.7 },
+                    { category: '生活日用', amount: 300, percentage: 10.0 },
+                    { category: '交通出行', amount: 200, percentage: 6.7 },
+                    { category: '休闲娱乐', amount: 200, percentage: 6.7 },
+                    { category: '其他', amount: 200, percentage: 6.7 }
+                ]
+            },
+            
+            // 2.7 散点图 - 汽车速度与制动距离
+            carSpeedData: {
+                title: '汽车速度与制动距离',
+                description: '展示汽车在不同速度下的制动距离关系',
+                chartDescription: '散点图适合分析两个变量之间的相关性，可以清楚看到速度与制动距离的正相关关系。',
+                data: [
+                    { speed: 10, distance: 0.5 },
+                    { speed: 20, distance: 2.0 },
+                    { speed: 30, distance: 4.4 },
+                    { speed: 40, distance: 7.9 },
+                    { speed: 50, distance: 12.3 },
+                    { speed: 60, distance: 17.7 },
+                    { speed: 70, distance: 24.1 },
+                    { speed: 80, distance: 31.5 },
+                    { speed: 90, distance: 39.9 },
+                    { speed: 100, distance: 49.2 }
+                ]
+            },
+            
+            // 2.8 箱形图 - 全国发电量统计
+            powerGenerationData: {
+                title: '全国发电量统计',
+                description: '展示2017年和2018年全国各月发电量对比',
+                chartDescription: '箱形图适合展示数据的分布情况，可以比较不同年份发电量的中位数、四分位数和异常值。',
+                data: [
+                    { month: '1月', year2018: 5200, year2017: 4605 },
+                    { month: '2月', year2018: 5254, year2017: 4710 },
+                    { month: '3月', year2018: 5283, year2017: 5169 },
+                    { month: '4月', year2018: 5107, year2017: 4767 },
+                    { month: '5月', year2018: 5443, year2017: 4947 },
+                    { month: '6月', year2018: 5550, year2017: 5203 },
+                    { month: '7月', year2018: 6400, year2017: 6047 },
+                    { month: '8月', year2018: 6404, year2017: 5945 },
+                    { month: '9月', year2018: 5483, year2017: 5219 },
+                    { month: '10月', year2018: 5330, year2017: 5038 },
+                    { month: '11月', year2018: 5543, year2017: 5196 },
+                    { month: '12月', year2018: 6199, year2017: 5698 }
+                ]
+            },
+            
+            // 2.9 雷达图 - 霍兰德职业兴趣测试
+            hollandData: {
+                title: '霍兰德职业兴趣测试',
+                description: '展示6种职业兴趣类型的测试结果',
+                chartDescription: '雷达图适合展示多维数据的相对关系，可以清晰看到不同职业兴趣类型的优势领域。',
+                data: [
+                    { type: '研究型(I)', score: 40 },
+                    { type: '艺术型(A)', score: 85 },
+                    { type: '社会型(S)', score: 43 },
+                    { type: '企业型(E)', score: 30 },
+                    { type: '传统型(C)', score: 20 },
+                    { type: '现实型(R)', score: 34 }
+                ]
+            },
+            
+            // 2.10 误差棒图 - 细根生物量
+            rootBiomassData: {
+                title: '细根生物量统计',
+                description: '展示4个树种不同季节的细根生物量',
+                chartDescription: '误差棒图适合展示数据的测量精度和变异程度，可以比较不同条件下的数据稳定性。',
+                data: [
+                    { season: '春季', tree1: 2.04, tree2: 1.69, tree3: 4.65, tree4: 3.39 },
+                    { season: '夏季', tree1: 1.57, tree2: 1.61, tree3: 4.99, tree4: 2.33 },
+                    { season: '秋季', tree1: 1.63, tree2: 1.64, tree3: 4.94, tree4: 4.10 }
+                ]
+            }
+        };
+
+        let currentChart = null;
+        let currentDataset = null;
+        let currentChartType = 'line';
+
+        // 页面初始化
+        function initPage() {
+            setupDatasetCards();
+            setupChartControls();
+        }
+
+        // 设置数据集卡片事件
+        function setupDatasetCards() {
+            document.querySelectorAll('.dataset-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    const key = e.currentTarget.dataset.key;
+                    selectDataset(key, chapter2Data[key]);
+                });
+            });
+        }
+
+        // 选择数据集
+        function selectDataset(key, dataset) {
+            currentDataset = { key, ...dataset };
+            
+            // 更新UI状态
+            document.querySelectorAll('.dataset-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // 显示图表控制
+            document.getElementById('chartControls').style.display = 'flex';
+            document.getElementById('chartTitle').textContent = dataset.title;
+            document.getElementById('chartDescription').style.display = 'block';
+            document.getElementById('chartDescText').textContent = dataset.chartDescription;
+            
+            // 根据数据类型自动选择图表类型
+            const autoChartType = getAutoChartType(key);
+            currentChartType = autoChartType;
+            updateChartTypeButtons();
+            
+            renderChart();
+        }
+
+        // 根据数据集类型自动选择图表类型
+        function getAutoChartType(datasetKey) {
+            const typeMap = {
+                temperatureData: 'line',
+                alibabaGMVData: 'bar',
+                shoppingRateData: 'bar',
+                logisticsData: 'area',
+                histogramData: 'bar',
+                alipayData: 'pie',
+                carSpeedData: 'scatter',
+                powerGenerationData: 'box',
+                hollandData: 'radar',
+                rootBiomassData: 'bar'
+            };
+            return typeMap[datasetKey] || 'line';
+        }
+
+        // 设置图表类型控制
+        function setupChartControls() {
+            document.querySelectorAll('.chart-type-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    currentChartType = e.target.dataset.type;
+                    updateChartTypeButtons();
+                    renderChart();
+                });
+            });
+        }
+
+        // 更新图表类型按钮状态
+        function updateChartTypeButtons() {
+            document.querySelectorAll('.chart-type-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.type === currentChartType);
+            });
+        }
+
+        // 渲染图表
+        function renderChart() {
+            if (!currentDataset) return;
+            
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            
+            // 销毁现有图表
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            const config = getChartConfig(currentDataset, currentChartType);
+            currentChart = new Chart(ctx, config);
+            
+            updateDataInfo();
+        }
+
+        // 获取图表配置
+        function getChartConfig(dataset, chartType) {
+            const commonConfig = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'white',
+                            font: { size: 11 }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        borderWidth: 1
+                    }
+                }
+            };
+
+            switch (chartType) {
+                case 'line':
+                    return getLineChartConfig(dataset, commonConfig);
+                case 'bar':
+                    return getBarChartConfig(dataset, commonConfig);
+                case 'pie':
+                    return getPieChartConfig(dataset, commonConfig);
+                case 'scatter':
+                    return getScatterChartConfig(dataset, commonConfig);
+                case 'area':
+                    return getAreaChartConfig(dataset, commonConfig);
+                case 'radar':
+                    return getRadarChartConfig(dataset, commonConfig);
+                case 'box':
+                    return getBoxChartConfig(dataset, commonConfig);
+                default:
+                    return getLineChartConfig(dataset, commonConfig);
+            }
+        }
+
+        // 折线图配置
+        function getLineChartConfig(dataset, commonConfig) {
+            const labels = dataset.data.map(item => item.day || item.month || item.season);
+            const datasets = [];
+            
+            if (dataset.key === 'temperatureData') {
+                datasets.push({
+                    label: '最高气温',
+                    data: dataset.data.map(item => item.maxTemp),
+                    borderColor: '#FF6B6B',
+                    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                });
+                datasets.push({
+                    label: '最低气温',
+                    data: dataset.data.map(item => item.minTemp),
+                    borderColor: '#4ECDC4',
+                    backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                });
+            } else {
+                const numericKeys = Object.keys(dataset.data[0]).filter(key => 
+                    typeof dataset.data[0][key] === 'number' && key !== 'rate' && key !== 'percentage'
+                );
+                
+                numericKeys.forEach((key, index) => {
+                    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
+                    datasets.push({
+                        label: key.includes('company') ? key.replace('company', '公司') : key,
+                        data: dataset.data.map(item => item[key]),
+                        borderColor: colors[index % colors.length],
+                        backgroundColor: colors[index % colors.length] + '20',
+                        tension: 0.4
+                    });
+                });
+            }
+            
+            return {
+                ...commonConfig,
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    ...commonConfig,
+                    scales: {
+                        x: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 柱状图配置
+        function getBarChartConfig(dataset, commonConfig) {
+            const labels = dataset.data.map(item => 
+                item.year || item.category || item.bin || item.season || item.month
+            );
+            const datasets = [];
+            
+            if (dataset.key === 'alibabaGMVData') {
+                datasets.push({
+                    label: 'GMV (亿元)',
+                    data: dataset.data.map(item => item.gmv),
+                    backgroundColor: 'rgba(255, 107, 107, 0.8)',
+                    borderColor: '#FF6B6B',
+                    borderWidth: 1
+                });
+            } else if (dataset.key === 'shoppingRateData') {
+                datasets.push({
+                    label: '替代率(%)',
+                    data: dataset.data.map(item => item.rate * 100),
+                    backgroundColor: 'rgba(78, 205, 196, 0.8)',
+                    borderColor: '#4ECDC4',
+                    borderWidth: 1
+                });
+            } else if (dataset.key === 'histogramData') {
+                datasets.push({
+                    label: '频数',
+                    data: dataset.data.map(item => item.value),
+                    backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                    borderColor: '#667eea',
+                    borderWidth: 1
+                });
+            }
+            
+            return {
+                ...commonConfig,
+                type: 'bar',
+                data: { labels, datasets },
+                options: {
+                    ...commonConfig,
+                    scales: {
+                        x: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 饼图配置
+        function getPieChartConfig(dataset, commonConfig) {
+            const labels = dataset.data.map(item => item.category);
+            const data = dataset.data.map(item => item.amount || item.percentage);
+            
+            return {
+                ...commonConfig,
+                type: 'pie',
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        backgroundColor: [
+                            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+                            '#DDA0DD', '#98D8C8', '#F8B195'
+                        ],
+                        borderWidth: 2,
+                        borderColor: 'rgba(255, 255, 255, 0.3)'
+                    }]
+                }
+            };
+        }
+
+        // 散点图配置
+        function getScatterChartConfig(dataset, commonConfig) {
+            const data = dataset.data.map(item => ({
+                x: item.speed,
+                y: item.distance
+            }));
+            
+            return {
+                ...commonConfig,
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '速度 vs 制动距离',
+                        data,
+                        backgroundColor: 'rgba(78, 205, 196, 0.8)',
+                        borderColor: '#4ECDC4',
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    ...commonConfig,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '速度 (km/h)',
+                                color: 'white'
+                            },
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '制动距离 (m)',
+                                color: 'white'
+                            },
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 面积图配置
+        function getAreaChartConfig(dataset, commonConfig) {
+            const labels = dataset.data.map(item => item.month);
+            const datasets = [
+                {
+                    label: '公司A',
+                    data: dataset.data.map(item => item.companyA),
+                    backgroundColor: 'rgba(255, 107, 107, 0.3)',
+                    borderColor: '#FF6B6B',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: '公司B',
+                    data: dataset.data.map(item => item.companyB),
+                    backgroundColor: 'rgba(78, 205, 196, 0.3)',
+                    borderColor: '#4ECDC4',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: '公司C',
+                    data: dataset.data.map(item => item.companyC),
+                    backgroundColor: 'rgba(69, 183, 209, 0.3)',
+                    borderColor: '#45B7D1',
+                    tension: 0.4,
+                    fill: true
+                }
+            ];
+            
+            return {
+                ...commonConfig,
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    ...commonConfig,
+                    scales: {
+                        x: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 雷达图配置
+        function getRadarChartConfig(dataset, commonConfig) {
+            const labels = dataset.data.map(item => item.type);
+            const data = dataset.data.map(item => item.score);
+            
+            return {
+                ...commonConfig,
+                type: 'radar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: '职业兴趣得分',
+                        data,
+                        backgroundColor: 'rgba(78, 205, 196, 0.2)',
+                        borderColor: '#4ECDC4',
+                        pointBackgroundColor: '#4ECDC4',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#4ECDC4'
+                    }]
+                },
+                options: {
+                    ...commonConfig,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: { color: 'white' },
+                            ticks: { color: 'white', backdropColor: 'transparent' }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 箱形图配置（简化版，使用柱状图替代）
+        function getBoxChartConfig(dataset, commonConfig) {
+            const labels = dataset.data.map(item => item.month);
+            const datasets = [
+                {
+                    label: '2018年发电量',
+                    data: dataset.data.map(item => item.year2018),
+                    backgroundColor: 'rgba(255, 107, 107, 0.8)',
+                    borderColor: '#FF6B6B',
+                    borderWidth: 1
+                },
+                {
+                    label: '2017年发电量',
+                    data: dataset.data.map(item => item.year2017),
+                    backgroundColor: 'rgba(78, 205, 196, 0.8)',
+                    borderColor: '#4ECDC4',
+                    borderWidth: 1
+                }
+            ];
+            
+            return {
+                ...commonConfig,
+                type: 'bar',
+                data: { labels, datasets },
+                options: {
+                    ...commonConfig,
+                    scales: {
+                        x: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 更新数据信息
+        function updateDataInfo() {
+            if (!currentDataset) return;
+            const dataCount = currentDataset.data.length;
+            document.getElementById('dataInfo').textContent = 
+                `共 ${dataCount} 条数据 | 当前图表类型: ${getChartTypeName(currentChartType)}`;
+        }
+
+        // 获取图表类型中文名称
+        function getChartTypeName(type) {
+            const names = {
+                line: '折线图',
+                bar: '柱状图',
+                pie: '饼图',
+                scatter: '散点图',
+                area: '面积图',
+                radar: '雷达图',
+                box: '箱形图'
+            };
+            return names[type] || type;
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+>>>>>>> 0fced19dfb059a036d83afc8de6e207b6bc74a3d
+</html>
