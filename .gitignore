@@ -4,6 +4,16 @@
 __MACOSX/
 素材/
 
+# 忽略除第2章外的其他章节文件
+第1章.ipynb
+第3章.ipynb
+第4章.ipynb
+第5章.ipynb
+第6章.ipynb
+第7章.ipynb
+第8章.ipynb
+第9章.ipynb
+
 # 忽略临时文件
 .DS_Store
 *.tmp
