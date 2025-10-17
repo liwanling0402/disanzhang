@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>第二章真实数据可视化平台</title>
+    <title>第二章真实数据可视化平台 - 022340611.xyz</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <style>
@@ -17,6 +17,7 @@
             background: rgba(255,255,255,0.1); 
             padding: 30px 0; text-align: center;
             backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         .header h1 { font-size: 2.5rem; margin-bottom: 10px; color: #4ecdc4; }
         .header p { font-size: 1.2rem; opacity: 0.8; }
@@ -25,14 +26,15 @@
             background: rgba(255,255,255,0.05); 
             padding: 25px; border-radius: 15px; 
             margin-bottom: 25px; backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1);
         }
         .data-selector { margin-bottom: 20px; }
-        .data-selector label { display: block; margin-bottom: 10px; font-weight: bold; }
+        .data-selector label { display: block; margin-bottom: 10px; font-weight: bold; font-size: 1.1rem; }
         .data-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
         .data-btn { 
             background: #4ecdc4; border: none; color: white; 
             padding: 12px 20px; border-radius: 8px; cursor: pointer; 
-            font-size: 14px; transition: all 0.3s ease;
+            font-size: 14px; transition: all 0.3s ease; font-weight: 500;
         }
         .data-btn:hover { background: #45b7d1; transform: translateY(-2px); }
         .data-btn.active { background: #ff6b6b; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4); }
@@ -41,6 +43,7 @@
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
             color: white; padding: 10px 15px; border-radius: 6px; 
             cursor: pointer; font-size: 14px; transition: all 0.3s ease;
+            font-weight: 500;
         }
         .chart-btn:hover { background: rgba(255,255,255,0.2); }
         .chart-btn.active { background: #4ecdc4; border-color: #4ecdc4; }
@@ -48,6 +51,7 @@
             background: rgba(255,255,255,0.05); 
             padding: 25px; border-radius: 15px; 
             margin-bottom: 25px; backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1);
         }
         canvas { width: 100% !important; height: 500px !important; }
         .chart-info { 
@@ -60,20 +64,33 @@
             background: rgba(255,255,255,0.05); 
             padding: 15px; border-radius: 8px; 
             margin-top: 15px; max-height: 200px; overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .loading { text-align: center; padding: 20px; color: #4ecdc4; }
+        .loading { text-align: center; padding: 20px; color: #4ecdc4; font-size: 1.1rem; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
         .data-table th, .data-table td { 
             padding: 8px; text-align: left; 
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        .data-table th { background: rgba(255,255,255,0.1); }
+        .data-table th { background: rgba(255,255,255,0.1); font-weight: 600; }
+        .status-bar { 
+            background: rgba(255,255,255,0.05); 
+            padding: 10px 15px; border-radius: 6px; 
+            margin-top: 10px; font-size: 12px; opacity: 0.8;
+        }
+        .footer {
+            text-align: center; padding: 20px; 
+            opacity: 0.6; font-size: 12px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 30px;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>第二章真实数据可视化平台</h1>
-        <p>基于实际CSV数据的交互式可视化分析</p>
+        <p>基于实际CSV数据的交互式可视化分析 - 部署版本</p>
+        <div class="status-bar" id="statusBar">平台已就绪，等待数据加载...</div>
     </div>
 
     <div class="container">
@@ -81,20 +98,25 @@
             <div class="data-selector">
                 <label>选择数据集：</label>
                 <div class="data-buttons">
-                    <button class="data-btn active" onclick="loadDataset('mpg')">汽车数据 (mpg_ggplot2.csv)</button>
-                    <button class="data-btn" onclick="loadDataset('usarrests')">美国犯罪数据 (USArrests.csv)</button>
-                    <button class="data-btn" onclick="loadDataset('cities')">美国城市数据 (2014_us_cities.csv)</button>
+                    <button class="data-btn active" onclick="loadDataset('temperature')">🌡️ 温度数据</button>
+                    <button class="data-btn" onclick="loadDataset('alibaba')">💰 阿里巴巴GMV数据</button>
+                    <button class="data-btn" onclick="loadDataset('shopping')">🛒 网购替代率数据</button>
+                    <button class="data-btn" onclick="loadDataset('logistics')">🚚 物流费用数据</button>
+                    <button class="data-btn" onclick="loadDataset('car')">🚗 汽车制动数据</button>
+                    <button class="data-btn" onclick="loadDataset('power')">⚡ 发电量数据</button>
+                    <button class="data-btn" onclick="loadDataset('holland')">🧠 霍兰德测试数据</button>
+                    <button class="data-btn" onclick="loadDataset('biomass')">🌳 细根生物量数据</button>
                 </div>
             </div>
             
             <div class="chart-buttons">
-                <button class="chart-btn active" onclick="showChart('scatter')">散点图</button>
-                <button class="chart-btn" onclick="showChart('bar')">柱状图</button>
-                <button class="chart-btn" onclick="showChart('line')">折线图</button>
-                <button class="chart-btn" onclick="showChart('pie')">饼图</button>
-                <button class="chart-btn" onclick="showChart('histogram')">直方图</button>
-                <button class="chart-btn" onclick="showChart('radar')">雷达图</button>
-                <button class="chart-btn" onclick="showChart('bubble')">气泡图</button>
+                <button class="chart-btn active" onclick="showChart('scatter')">📊 散点图</button>
+                <button class="chart-btn" onclick="showChart('bar')">📈 柱状图</button>
+                <button class="chart-btn" onclick="showChart('line')">📉 折线图</button>
+                <button class="chart-btn" onclick="showChart('pie')">🥧 饼图</button>
+                <button class="chart-btn" onclick="showChart('histogram')">📋 直方图</button>
+                <button class="chart-btn" onclick="showChart('radar')">🎯 雷达图</button>
+                <button class="chart-btn" onclick="showChart('bubble')">🫧 气泡图</button>
             </div>
         </div>
 
@@ -106,30 +128,59 @@
         </div>
     </div>
 
+    <div class="footer">
+        部署版本 | 数据可视化平台 | http://022340611.xyz/ | 最后更新: 2025/10/17
+    </div>
+
     <script>
         let currentChart = null;
         let currentDataset = null;
-        let currentDataType = 'mpg';
+        let currentDataType = 'temperature';
         
         // 颜色配置
         const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'];
         
-        // 数据集描述
+        // 第二章数据集描述
         const datasetInfo = {
-            mpg: {
-                name: '汽车燃油效率数据',
-                description: '包含不同制造商、车型的排量、油耗等数据',
-                file: './素材/mpg_ggplot2.csv'
+            temperature: {
+                name: '未来15天温度数据',
+                description: '展示未来15天的最高气温和最低气温变化趋势',
+                file: './素材/温度数据.csv'
             },
-            usarrests: {
-                name: '美国各州犯罪数据',
-                description: '包含各州的谋杀、袭击、强奸等犯罪率数据',
-                file: './素材/USArrests.csv'
+            alibaba: {
+                name: '阿里巴巴GMV数据',
+                description: '2013-2019财年阿里巴巴淘宝和天猫平台GMV数据',
+                file: './素材/阿里巴巴GMV数据.csv'
             },
-            cities: {
-                name: '美国城市人口数据',
-                description: '包含美国主要城市的人口数量和地理位置数据',
-                file: './素材/2014_us_cities.csv'
+            shopping: {
+                name: '网购替代率数据',
+                description: '各商品种类的网购替代率统计分析',
+                file: './素材/网购替代率数据.csv'
+            },
+            logistics: {
+                name: '物流费用数据',
+                description: '三家物流公司各月的物流费用统计',
+                file: './素材/物流费用数据.csv'
+            },
+            car: {
+                name: '汽车制动数据',
+                description: '汽车速度与制动距离的关系数据',
+                file: './素材/汽车制动数据.csv'
+            },
+            power: {
+                name: '发电量数据',
+                description: '2017年和2018年全国发电量统计对比',
+                file: './素材/发电量数据.csv'
+            },
+            holland: {
+                name: '霍兰德测试数据',
+                description: '霍兰德职业兴趣测试的六个维度得分',
+                file: './素材/霍兰德测试数据.csv'
+            },
+            biomass: {
+                name: '细根生物量数据',
+                description: '4个树种不同季节的细根生物量统计',
+                file: './素材/细根生物量数据.csv'
             }
         };
         
@@ -144,6 +195,11 @@
             bubble: "气泡图 - 三个维度的数据可视化，气泡大小表示第三个变量"
         };
 
+        // 更新状态栏
+        function updateStatus(message) {
+            document.getElementById('statusBar').textContent = message;
+        }
+
         // 加载数据集
         function loadDataset(type, event) {
             currentDataType = type;
@@ -154,6 +210,7 @@
             
             document.getElementById('loading').style.display = 'block';
             document.getElementById('myChart').style.display = 'none';
+            updateStatus(`正在加载 ${datasetInfo[type].name}...`);
             
             const filePath = datasetInfo[type].file;
             Papa.parse(filePath, {
@@ -162,6 +219,7 @@
                 complete: function(results) {
                     if (results.errors.length > 0) {
                         console.warn('解析警告:', results.errors);
+                        updateStatus(`数据加载完成，有 ${results.errors.length} 个警告`);
                     }
                     
                     currentDataset = results.data.filter(row => {
@@ -171,6 +229,7 @@
                     
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('myChart').style.display = 'block';
+                    updateStatus(`${datasetInfo[type].name} 加载成功，共 ${currentDataset.length} 条记录`);
                     
                     // 显示数据预览
                     showDataPreview();
@@ -182,6 +241,7 @@
                     console.error('数据加载错误:', error);
                     document.getElementById('loading').innerHTML = 
                         '数据加载失败，请检查文件路径或网络连接<br>错误信息: ' + error.message;
+                    updateStatus('数据加载失败: ' + error.message);
                 }
             });
         }
@@ -195,7 +255,7 @@
             }
             
             const headers = Object.keys(currentDataset[0]);
-            let html = `<h4>数据预览 (前5行)</h4>`;
+            let html = `<h4>📋 数据预览 (前5行)</h4>`;
             html += `<table class="data-table">`;
             html += `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
             
@@ -230,6 +290,7 @@
             }
             
             const ctx = document.getElementById('myChart').getContext('2d');
+            updateStatus(`正在生成 ${type} 图表...`);
             
             try {
                 switch(type) {
@@ -255,10 +316,12 @@
                         createBubbleChart(ctx);
                         break;
                 }
+                updateStatus(`${type} 图表生成成功`);
             } catch (error) {
                 console.error('图表创建错误:', error);
                 document.getElementById('chartInfo').innerHTML = 
                     `<strong>图表创建失败: ${error.message}</strong>`;
+                updateStatus(`图表创建失败: ${error.message}`);
             }
         }
 
@@ -266,24 +329,51 @@
         function createScatterChart(ctx) {
             let xData, yData, label, xLabel, yLabel;
             
-            if (currentDataType === 'mpg') {
-                xData = currentDataset.map(d => parseFloat(d.displ));
-                yData = currentDataset.map(d => parseFloat(d.cty));
-                label = '城市油耗 vs 排量';
-                xLabel = '排量 (L)';
-                yLabel = '城市油耗 (mpg)';
-            } else if (currentDataType === 'usarrests') {
-                xData = currentDataset.map(d => parseFloat(d.Assault));
-                yData = currentDataset.map(d => parseFloat(d.Murder));
-                label = '谋杀率 vs 袭击率';
-                xLabel = '袭击率 (每10万人)';
-                yLabel = '谋杀率 (每10万人)';
+            if (currentDataType === 'temperature') {
+                xData = currentDataset.map(d => parseFloat(d.day));
+                yData = currentDataset.map(d => parseFloat(d.maxTemp));
+                label = '天数 vs 最高温度';
+                xLabel = '天数';
+                yLabel = '最高温度 (°C)';
+            } else if (currentDataType === 'alibaba') {
+                xData = currentDataset.map(d => parseInt(d.year.replace('FY', '')));
+                yData = currentDataset.map(d => parseFloat(d.gmv));
+                label = '年份 vs GMV';
+                xLabel = '年份';
+                yLabel = 'GMV (亿元)';
+            } else if (currentDataType === 'shopping') {
+                xData = currentDataset.map((_, i) => i + 1);
+                yData = currentDataset.map(d => parseFloat(d.rate));
+                label = '商品种类 vs 替代率';
+                xLabel = '商品种类序号';
+                yLabel = '网购替代率';
+            } else if (currentDataType === 'car') {
+                xData = currentDataset.map(d => parseFloat(d.speed));
+                yData = currentDataset.map(d => parseFloat(d.distance));
+                label = '速度 vs 制动距离';
+                xLabel = '速度 (km/h)';
+                yLabel = '制动距离 (m)';
             } else {
-                xData = currentDataset.map(d => parseFloat(d.lon));
-                yData = currentDataset.map(d => parseFloat(d.lat));
-                label = '城市地理位置';
-                xLabel = '经度';
-                yLabel = '纬度';
+                // 默认使用第一个数值列和第二个数值列
+                const headers = Object.keys(currentDataset[0] || {});
+                const numericHeaders = headers.filter(h => {
+                    const val = currentDataset[0][h];
+                    return !isNaN(parseFloat(val)) && val !== '';
+                });
+                
+                if (numericHeaders.length >= 2) {
+                    xData = currentDataset.map(d => parseFloat(d[numericHeaders[0]]));
+                    yData = currentDataset.map(d => parseFloat(d[numericHeaders[1]]));
+                    label = `${numericHeaders[0]} vs ${numericHeaders[1]}`;
+                    xLabel = numericHeaders[0];
+                    yLabel = numericHeaders[1];
+                } else {
+                    xData = currentDataset.map((_, i) => i);
+                    yData = currentDataset.map(d => parseFloat(Object.values(d)[0] || 0));
+                    label = '序号 vs 数值';
+                    xLabel = '序号';
+                    yLabel = '数值';
+                }
             }
             
             // 过滤无效数据
@@ -324,29 +414,51 @@
         function createBarChart(ctx) {
             let labels, data, label;
             
-            if (currentDataType === 'mpg') {
-                const manufacturerCount = {};
-                currentDataset.forEach(d => {
-                    if (d.manufacturer) {
-                        manufacturerCount[d.manufacturer] = (manufacturerCount[d.manufacturer] || 0) + 1;
-                    }
-                });
-                labels = Object.keys(manufacturerCount);
-                data = Object.values(manufacturerCount);
-                label = '各制造商车型数量';
-            } else if (currentDataType === 'usarrests') {
-                labels = currentDataset.map(d => d.State || '未知州').slice(0, 15); // 限制显示数量
-                data = currentDataset.map(d => parseFloat(d.Murder || 0)).slice(0, 15);
-                label = '各州谋杀率 (前15个州)';
+            if (currentDataType === 'temperature') {
+                labels = currentDataset.map(d => `第${d.day}天`);
+                data = currentDataset.map(d => parseFloat(d.maxTemp));
+                label = '每日最高温度';
+            } else if (currentDataType === 'alibaba') {
+                labels = currentDataset.map(d => d.year);
+                data = currentDataset.map(d => parseFloat(d.gmv) / 1000); // 转换为千亿元
+                label = '阿里巴巴GMV (千亿元)';
+            } else if (currentDataType === 'shopping') {
+                labels = currentDataset.map(d => d.category.substring(0, 8) + '...');
+                data = currentDataset.map(d => parseFloat(d.rate) * 100); // 转换为百分比
+                label = '网购替代率 (%)';
+            } else if (currentDataType === 'logistics') {
+                labels = currentDataset.map(d => `${d.month}月`);
+                data = currentDataset.map(d => parseFloat(d.companyA));
+                label = '物流公司A月费用';
+            } else if (currentDataType === 'car') {
+                labels = currentDataset.map(d => `${d.speed}km/h`);
+                data = currentDataset.map(d => parseFloat(d.distance));
+                label = '制动距离 (m)';
+            } else if (currentDataType === 'power') {
+                labels = Array.from({length: 12}, (_, i) => `${i+1}月`);
+                data = currentDataset.map(d => parseFloat(d.power2018));
+                label = '2018年月发电量';
             } else {
-                // 取人口最多的10个城市
-                const sortedCities = currentDataset
-                    .filter(d => d.pop && d.name)
-                    .sort((a, b) => parseFloat(b.pop) - parseFloat(a.pop))
-                    .slice(0, 10);
-                labels = sortedCities.map(d => d.name.trim());
-                data = sortedCities.map(d => parseFloat(d.pop) / 1000000); // 转换为百万
-                label = '人口最多的10个城市 (百万)';
+                // 默认使用第一个文本列和第一个数值列
+                const headers = Object.keys(currentDataset[0] || {});
+                const textHeaders = headers.filter(h => {
+                    const val = currentDataset[0][h];
+                    return isNaN(parseFloat(val)) && val !== '';
+                });
+                const numericHeaders = headers.filter(h => {
+                    const val = currentDataset[0][h];
+                    return !isNaN(parseFloat(val)) && val !== '';
+                });
+                
+                if (textHeaders.length > 0 && numericHeaders.length > 0) {
+                    labels = currentDataset.map(d => d[textHeaders[0]].substring(0, 10));
+                    data = currentDataset.map(d => parseFloat(d[numericHeaders[0]]));
+                    label = `${numericHeaders[0]}`;
+                } else {
+                    labels = currentDataset.map((_, i) => `项目${i+1}`);
+                    data = currentDataset.map(d => parseFloat(Object.values(d)[0] || 0));
+                    label = '数值';
+                }
             }
             
             currentChart = new Chart(ctx, {
@@ -384,7 +496,6 @@
             let labels, data, label;
             
             if (currentDataType === 'mpg') {
-                // 按年份分组计算平均油耗
                 const yearData = {};
                 currentDataset.forEach(d => {
                     if (d.year && d.cty) {
@@ -402,7 +513,6 @@
                 });
                 label = '各年份平均城市油耗';
             } else if (currentDataType === 'usarrests') {
-                // 按谋杀率排序显示
                 const sortedData = currentDataset
                     .filter(d => d.State && d.Murder)
                     .sort((a, b) => parseFloat(a.Murder) - parseFloat(b.Murder))
@@ -412,7 +522,6 @@
                 data = sortedData.map(d => parseFloat(d.Murder));
                 label = '各州谋杀率 (升序排列)';
             } else {
-                // 按人口排序显示前15个城市
                 const sortedCities = currentDataset
                     .filter(d => d.name && d.pop)
                     .sort((a, b) => parseFloat(b.pop) - parseFloat(a.pop))
@@ -476,7 +585,6 @@
                 labels = Object.keys(classCount);
                 data = Object.values(classCount);
             } else if (currentDataType === 'usarrests') {
-                // 按犯罪率分组
                 labels = ['低犯罪率(<5)', '中犯罪率(5-10)', '高犯罪率(>10)'];
                 const murderRates = currentDataset.map(d => parseFloat(d.Murder || 0));
                 data = [
@@ -485,7 +593,6 @@
                     murderRates.filter(r => r > 10).length
                 ];
             } else {
-                // 按人口规模分组
                 labels = ['小城市(<50万)', '中等城市(50-100万)', '大城市(>100万)'];
                 const populations = currentDataset.map(d => parseFloat(d.pop || 0));
                 data = [
@@ -585,7 +692,6 @@
                 return;
             }
             
-            // 取前5个州的数据
             const states = currentDataset.slice(0, 5).filter(state => state.State);
             const labels = ['谋杀率', '袭击率', '城市人口比例', '强奸率'];
             
@@ -603,7 +709,7 @@
                         label: state.State,
                         data: [
                             parseFloat(state.Murder || 0),
-                            parseFloat(state.Assault || 0) / 10, // 缩放
+                            parseFloat(state.Assault || 0) / 10,
                             parseFloat(state.UrbanPop || 0),
                             parseFloat(state.Rape || 0)
                         ],
@@ -712,10 +818,27 @@
             });
         }
 
-        // 初始化加载MPG数据
+        // 初始化加载温度数据
         window.onload = function() {
-            loadDataset('mpg');
+            updateStatus('平台初始化完成，正在加载默认数据集...');
+            loadDataset('temperature');
         };
+
+        // 添加键盘快捷键支持
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1': loadDataset('temperature'); break;
+                    case '2': loadDataset('alibaba'); break;
+                    case '3': loadDataset('shopping'); break;
+                    case '4': loadDataset('logistics'); break;
+                    case '5': loadDataset('car'); break;
+                    case '6': loadDataset('power'); break;
+                    case '7': loadDataset('holland'); break;
+                    case '8': loadDataset('biomass'); break;
+                }
+            }
+        });
     </script>
 </body>
 </html>
