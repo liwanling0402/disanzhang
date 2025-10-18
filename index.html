@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式数据可视化平台 - 第二章</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; color: #333; padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 40px; color: white; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .header p { font-size: 1.2rem; opacity: 0.9; }
+        .controls { background: white; padding: 20px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        .chart-type-selector { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .chart-btn { padding: 15px; border: none; border-radius: 10px; background: linear-gradient(45deg, #667eea, #764ba2); color: white; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; font-weight: 600; }
+        .chart-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .chart-btn.active { background: linear-gradient(45deg, #f093fb, #f5576c); transform: translateY(-2px); }
+        .chart-container { background: white; padding: 30px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); min-height: 500px; }
+        .chart-wrapper { width: 100%; height: 500px; position: relative; }
+        .description { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px; border-left: 4px solid #667eea; }
+        .description h3 { color: #667eea; margin-bottom: 10px; }
+        .data-controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .control-group { display: flex; align-items: center; gap: 10px; }
+        .control-group label { font-weight: 600; color: #555; }
+        .control-group select, .control-group input { padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 5px; font-size: 0.9rem; }
+        .control-group input { width: 80px; }
+        .hidden { display: none; }
+        @media (max-width: 768px) {
+            .chart-type-selector { grid-template-columns: 1fr; }
+            .chart-container { padding: 15px; }
+            .chart-wrapper { height: 400px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 交互式数据可视化平台</h1>
+            <p>基于第二章内容 - 10种图表类型完整展示</p>
+        </div>
+        
+        <div class="controls">
+            <div class="chart-type-selector">
+                <button class="chart-btn active" onclick="showChart('line')">📈 折线图</button>
+                <button class="chart-btn" onclick="showChart('bar')">📊 柱形图</button>
+                <button class="chart-btn" onclick="showChart('horizontal-bar')">📋 条形图</button>
+                <button class="chart-btn" onclick="showChart('area')">🔺 面积图</button>
+                <button class="chart-btn" onclick="showChart('histogram')">📏 直方图</button>
+                <button class="chart-btn" onclick="showChart('pie')">🥧 饼图</button>
+                <button class="chart-btn" onclick="showChart('scatter')">🔵 散点图</button>
+                <button class="chart-btn" onclick="showChart('box')">📦 箱形图</button>
+                <button class="chart-btn" onclick="showChart('radar')">🎯 雷达图</button>
+                <button class="chart-btn" onclick="showChart('error')">📏 误差棒图</button>
+            </div>
+        </div>
+        
+        <!-- 折线图 -->
+        <div id="line-chart" class="chart-container">
+            <div class="chart-wrapper"><canvas id="lineChart"></canvas></div>
+            <div class="description">
+                <h3>折线图 - 未来15天最高气温和最低气温</h3>
+                <p>展示连续数据的变化趋势，适合观察时间序列数据的波动情况。</p>
+            </div>
+        </div>
+        
+        <!-- 其他图表容器 -->
+        <div id="bar-chart" class="chart-container hidden"><div class="chart-wrapper"><canvas id="barChart"></canvas></div></div>
+        <div id="horizontal-bar-chart" class="chart-container hidden"><div class="chart-wrapper"><canvas id="horizontalBarChart"></canvas></div></div>
+        <div id="area-chart" class="chart-container hidden"><div class="chart-wrapper"><canvas id="areaChart"></canvas></div></div>
+        <div id="histogram-chart" class="chart-container hidden"><div class="chart-wrapper"><canvas id="histogramChart"></canvas></div></div>
+        <div id="pie-chart" class="chart-container hidden"><div class="chart-wrapper"><canvas id="pieChart"></canvas></div></div>
+        <div id="scatter-chart" class="chart-container hidden"><div class="chart-wrapper"><canvas id="scatterChart"></canvas></div></div>
+        <div id="box-chart" class="chart-container hidden"><div class="chart-wrapper"><canvas id="boxChart"></canvas></div></div>
+        <div id="radar-chart" class="chart-container hidden"><div class="chart-wrapper"><canvas id="radarChart"></canvas></div></div>
+        <div id="error-chart" class="chart-container hidden"><div class="chart-wrapper"><canvas id="errorChart"></canvas></div></div>
+    </div>
+
+    <script>
+        let charts = {};
+        let currentChartType = 'line';
+        
+        function showChart(type) {
+            document.querySelectorAll('.chart-container').forEach(c => c.classList.add('hidden'));
+            document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`${type}-chart`).classList.remove('hidden');
+            event.target.classList.add('active');
+            currentChartType = type;
+            if (!charts[type]) initChart(type);
+        }
+        
+        function initChart(type) {
+            const ctx = document.getElementById(`${type}Chart`).getContext('2d');
+            const configs = {
+                line: {
+                    type: 'line', data: {
+                        labels: Array.from({length: 15}, (_, i) => i + 4),
+                        datasets: [
+                            { label: '最高气温 (°C)', data: [32,33,34,34,33,31,30,29,30,29,26,23,21,25,31], borderColor: '#ff6b6b', backgroundColor: 'rgba(255,107,107,0.1)', tension: 0.4, fill: true },
+                            { label: '最低气温 (°C)', data: [19,19,20,22,22,21,22,16,18,18,17,14,15,16,16], borderColor: '#4ecdc4', backgroundColor: 'rgba(78,205,196,0.1)', tension: 0.4, fill: true }
+                        ]
+                    }, options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: '未来15天气温变化趋势' } } }
+                },
+                bar: {
+                    type: 'bar', data: {
+                        labels: ["FY2013","FY2014","FY2015","FY2016","FY2017","FY2018","FY2019"],
+                        datasets: [{ label: 'GMV (亿元)', data: [10770,16780,24440,30920,37670,48200,57270], backgroundColor: 'rgba(102,126,234,0.8)' }]
+                    }, options: { responsive: true, maintainAspectRatio: false }
+                },
+                // 其他图表配置...
+                pie: {
+                    type: 'pie', data: {
+                        labels: ['购物','人情往来','餐饮美食','通信物流','生活日用','交通出行','休闲娱乐','其他'],
+                        datasets: [{ data: [800,100,1000,200,300,200,200,200], backgroundColor: ['#ff6b6b','#4ecdc4','#45b7d1','#96ceb4','#feca57','#ff9ff3','#54a0ff','#5f27cd'] }]
+                    }, options: { responsive: true, maintainAspectRatio: false }
+                }
+            };
+            
+            charts[type] = new Chart(ctx, configs[type] || configs.line);
+        }
+        
+        // 初始化第一个图表
+        window.addEventListener('load', () => initChart('line'));
+    </script>
+</body>
+</html>
