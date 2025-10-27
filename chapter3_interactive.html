@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第三章数据可视化平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .controls {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .chart-type-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        
+        .chart-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .chart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .chart-btn.active {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+        }
+        
+        .dataset-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .dataset-selector label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .dataset-selector select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            min-width: 200px;
+        }
+        
+        .animation-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .animation-control label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .animation-control input {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            min-height: 500px;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 450px;
+        }
+        
+        .chart-description {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .chart-description h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .chart-description p {
+            line-height: 1.6;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .chart-type-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .chart-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .dataset-selector, .animation-control {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .dataset-selector select, .animation-control input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 第三章数据可视化平台</h1>
+            <p>基于第三章内容的交互式数据可视化展示</p>
+        </div>
+        
+        <div class="controls">
+            <div class="chart-type-selector">
+                <button class="chart-btn active" onclick="switchChartType('trigonometry')">三角函数图</button>
+                <button class="chart-btn" onclick="switchChartType('boxplot')">箱形图</button>
+                <button class="chart-btn" onclick="switchChartType('movie')">电影票房排行</button>
+                <button class="chart-btn" onclick="switchChartType('scatter')">散点分布</button>
+                <button class="chart-btn" onclick="switchChartType('line')">趋势分析</button>
+            </div>
+            
+            <div class="dataset-selector">
+                <label for="datasetSelect">选择数据集：</label>
+                <select id="datasetSelect" onchange="updateChart()">
+                    <option value="sin_cos">正弦余弦函数</option>
+                    <option value="quality">零件质量分布</option>
+                    <option value="movie2019">2019年电影票房</option>
+                    <option value="random">随机数据分布</option>
+                </select>
+            </div>
+            
+            <div class="animation-control">
+                <label for="animationSpeed">动画速度：</label>
+                <input type="range" id="animationSpeed" min="0" max="2000" value="1000" onchange="updateAnimationSpeed()">
+                <span id="speedValue">中等</span>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-wrapper">
+                <canvas id="dataChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-description">
+            <h3>📈 图表说明</h3>
+            <p id="chartDescription">
+                本章主要展示三角函数的数据可视化，包括正弦函数和余弦函数的波形图。
+                通过调整参数可以观察函数在不同区间的变化趋势。
+            </p>
+        </div>
+    </div>
+
+    <script>
+        let currentChart = null;
+        let currentChartType = 'trigonometry';
+        let animationDuration = 1000;
+
+        // 数据集定义
+        const datasets = {
+            sin_cos: {
+                labels: Array.from({length: 256}, (_, i) => -Math.PI + (2 * Math.PI * i) / 255),
+                data: {
+                    sin: Array.from({length: 256}, (_, i) => Math.sin(-Math.PI + (2 * Math.PI * i) / 255)),
+                    cos: Array.from({length: 256}, (_, i) => Math.cos(-Math.PI + (2 * Math.PI * i) / 255))
+                },
+                description: '正弦函数和余弦函数在[-π, π]区间内的波形图。正弦函数(y=sin(x))呈波浪形，余弦函数(y=cos(x))相位偏移π/2。'
+            },
+            quality: {
+                labels: ['零件A', '零件B', '零件C', '零件D', '零件E', '零件F'],
+                data: [85, 92, 78, 95, 88, 91],
+                description: '零件质量检测数据分布，展示不同零件的质量评分。箱形图可以显示数据的分布特征，包括中位数、四分位数等统计信息。'
+            },
+            movie2019: {
+                labels: ['哪吒之魔童降世', '流浪地球', '复仇者联盟4', '我和我的祖国', '中国机长', '疯狂的外星人'],
+                data: [50.15, 46.86, 42.50, 31.71, 29.12, 22.13],
+                description: '2019年中国内地电影票房排行榜前六名。数据单位为亿元人民币，展示当年最受欢迎的电影作品。'
+            },
+            random: {
+                labels: ['数据集1', '数据集2', '数据集3', '数据集4', '数据集5'],
+                data: [
+                    [25, 30, 35, 40, 45, 50, 55],
+                    [20, 28, 32, 38, 42, 48, 52],
+                    [30, 35, 38, 42, 46, 50, 54],
+                    [22, 26, 30, 36, 40, 44, 48],
+                    [28, 32, 36, 40, 44, 48, 52]
+                ],
+                description: '随机生成的数据集，用于展示散点分布和趋势分析。每个数据集包含7个数据点，展示不同的分布模式。'
+            }
+        };
+
+        // 图表配置函数
+        function createTrigonometryConfig(dataset) {
+            return {
+                type: 'line',
+                data: {
+                    labels: dataset.labels.map(x => x.toFixed(2)),
+                    datasets: [
+                        {
+                            label: '正弦函数 y=sin(x)',
+                            data: dataset.data.sin,
+                            borderColor: '#4a90e2',
+                            backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4
+                        },
+                        {
+                            label: '余弦函数 y=cos(x)',
+                            data: dataset.data.cos,
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: animationDuration
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '三角函数波形图',
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'x轴'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'y轴'
+                            },
+                            min: -1.5,
+                            max: 1.5
+                        }
+                    }
+                }
+            };
+        }
+
+        function createBoxplotConfig(dataset) {
+            const boxData = dataset.data.map(value => {
+                const center = value;
+                const dataPoints = [];
+                for (let i = 0; i < 20; i++) {
+                    dataPoints.push(center * (0.8 + Math.random() * 0.4));
+                }
+                return dataPoints;
+            });
+            
+            return {
+                type: 'boxplot',
+                data: {
+                    labels: dataset.labels,
+                    datasets: [{
+                        label: '数据分布',
+                        data: boxData,
+                        backgroundColor: 'rgba(74, 144, 226, 0.2)',
+                        borderColor: '#4a90e2',
+                        borderWidth: 2,
+                        outlierColor: '#e74c3c',
+                        outlierRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: animationDuration
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '箱形图 - 数据分布统计',
+                            font: { size: 16 }
+                        }
+                    }
+                }
+            };
+        }
+
+        function createMovieConfig(dataset) {
+            return {
+                type: 'bar',
+                data: {
+                    labels: dataset.labels,
+                    datasets: [{
+                        label: '票房收入（亿元）',
+                        data: dataset.data,
+                        backgroundColor: [
+                            '#4a90e2', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'
+                        ],
+                        borderColor: '#34495e',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: animationDuration
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '2019年内地电影票房排行榜',
+                            font: { size: 16 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '票房收入（亿元）'
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        function createScatterConfig(dataset) {
+            const scatterData = [];
+            dataset.data.forEach((dataArray, index) => {
+                dataArray.forEach((value, pointIndex) => {
+                    scatterData.push({
+                        x: pointIndex,
+                        y: value,
+                        dataset: `数据集${index + 1}`
+                    });
+                });
+            });
+            
+            const groupedData = {};
+            scatterData.forEach(point => {
+                if (!groupedData[point.dataset]) {
+                    groupedData[point.dataset] = [];
+                }
+                groupedData[point.dataset].push({x: point.x, y: point.y});
+            });
+            
+            const colors = ['#4a90e2', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6'];
+            const datasetsArray = Object.keys(groupedData).map((key, index) => ({
+                label: key,
+                data: groupedData[key],
+                backgroundColor: colors[index],
+                borderColor: colors[index],
+                pointRadius: 8
+            }));
+            
+            return {
+                type: 'scatter',
+                data: {
+                    datasets: datasetsArray
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: animationDuration
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '散点分布图',
+                            font: { size: 16 }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '数据点索引'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '数值'
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        function createLineConfig(dataset) {
+            const lineData = [];
+            dataset.data.forEach((dataArray, index) => {
+                lineData.push({
+                    label: `数据集${index + 1}`,
+                    data: dataArray,
+                    borderColor: ['#4a90e2', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6'][index],
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4
+                });
+            });
+            
+            return {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 7}, (_, i) => `点${i + 1}`),
+                    datasets: lineData
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: animationDuration
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '趋势分析图',
+                            font: { size: 16 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: '数值'
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 切换图表类型
+        function switchChartType(type) {
+            currentChartType = type;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.chart-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 根据图表类型更新数据集选项
+            const datasetSelect = document.getElementById('datasetSelect');
+            
+            switch(type) {
+                case 'trigonometry':
+                    datasetSelect.innerHTML = `
+                        <option value="sin_cos">正弦余弦函数</option>
+                    `;
+                    break;
+                case 'boxplot':
+                    datasetSelect.innerHTML = `
+                        <option value="quality">零件质量分布</option>
+                        <option value="movie2019">电影票房数据</option>
+                    `;
+                    break;
+                case 'movie':
+                    datasetSelect.innerHTML = `
+                        <option value="movie2019">2019年电影票房</option>
+                    `;
+                    break;
+                case 'scatter':
+                case 'line':
+                    datasetSelect.innerHTML = `
+                        <option value="random">随机数据分布</option>
+                    `;
+                    break;
+            }
+            
+            updateChart();
+        }
+
+        // 更新图表
+        function updateChart() {
+            const datasetSelect = document.getElementById('datasetSelect');
+            const selectedDataset = datasetSelect.value;
+            const dataset = datasets[selectedDataset];
+            
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            const ctx = document.getElementById('dataChart').getContext('2d');
+            let config;
+            
+            switch(currentChartType) {
+                case 'trigonometry':
+                    config = createTrigonometryConfig(dataset);
+                    break;
+                case 'boxplot':
+                    config = createBoxplotConfig(dataset);
+                    break;
+                case 'movie':
+                    config = createMovieConfig(dataset);
+                    break;
+                case 'scatter':
+                    config = createScatterConfig(dataset);
+                    break;
+                case 'line':
+                    config = createLineConfig(dataset);
+                    break;
+            }
+            
+            currentChart = new Chart(ctx, config);
+            
+            // 更新图表说明
+            document.getElementById('chartDescription').textContent = dataset.description;
+        }
+
+        // 更新动画速度
+        function updateAnimationSpeed() {
+            const speedSlider = document.getElementById('animationSpeed');
+            const speedValue = document.getElementById('speedValue');
+            animationDuration = parseInt(speedSlider.value);
+            
+            if (animationDuration < 500) {
+                speedValue.textContent = '快速';
+            } else if (animationDuration < 1500) {
+                speedValue.textContent = '中等';
+            } else {
+                speedValue.textContent = '慢速';
+            }
+            
+            if (currentChart) {
+                currentChart.options.animation.duration = animationDuration;
+                currentChart.update('none');
+            }
+        }
+
+        // 页面加载时初始化图表
+        window.onload = function() {
+            updateChart();
+        };
+    </script>
+</body>
+</html>
