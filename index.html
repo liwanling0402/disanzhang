@@ -385,10 +385,15 @@
         // 创建散点图配置
         function createScatterConfig(dataset) {
             // 为散点图生成合适的坐标数据
-            const scatterData = dataset.data[0].map((value, index) => ({
-                x: value,
-                y: dataset.data[1] ? dataset.data[1][index] : value * 0.8 + Math.random() * 20
-            }));
+            const scatterData = [];
+            const baseData = Array.isArray(dataset.data[0]) ? dataset.data[0] : dataset.data;
+            
+            baseData.forEach((value, index) => {
+                scatterData.push({
+                    x: value,
+                    y: (Array.isArray(dataset.data[1]) ? dataset.data[1][index] : value * 0.8 + Math.random() * 20)
+                });
+            });
             
             return {
                 type: 'scatter',
@@ -498,21 +503,19 @@
 
         // 创建箱形图配置
         function createBoxConfig(dataset) {
-            // 为箱形图生成合适的数据格式
+            // 为箱形图生成合适的数据格式 - 使用正确的箱形图数据结构
             const boxData = dataset.data.map(value => {
-                // 生成围绕中心值的随机分布数据
+                // 生成围绕中心值的随机分布数据点
                 const center = value;
-                return [
-                    center * 0.8, // 最小值
-                    center * 0.9, // 下四分位数
-                    center,       // 中位数
-                    center * 1.1, // 上四分位数
-                    center * 1.2  // 最大值
-                ];
+                const dataPoints = [];
+                for (let i = 0; i < 20; i++) {
+                    dataPoints.push(center * (0.8 + Math.random() * 0.4));
+                }
+                return dataPoints;
             });
             
             return {
-                type: 'box',
+                type: 'boxplot',
                 data: {
                     labels: dataset.labels,
                     datasets: [{
@@ -520,7 +523,9 @@
                         data: boxData,
                         backgroundColor: 'rgba(74, 144, 226, 0.2)',
                         borderColor: '#4a90e2',
-                        borderWidth: 2
+                        borderWidth: 2,
+                        outlierColor: '#e74c3c',
+                        outlierRadius: 5
                     }]
                 },
                 options: {
@@ -543,7 +548,8 @@
         // 创建误差棒图配置
         function createErrorBarConfig(dataset) {
             // 为误差棒图生成误差数据
-            const errorData = dataset.data.map(value => ({
+            const baseData = Array.isArray(dataset.data[0]) ? dataset.data[0] : dataset.data;
+            const errorData = baseData.map(value => ({
                 y: value,
                 yMin: value * 0.9,
                 yMax: value * 1.1
