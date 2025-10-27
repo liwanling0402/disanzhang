@@ -3,605 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>交互式数据可视化平台 - 基于Jupyter笔记本内容</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-boxplot@4"></script>
+    <title>数据可视化平台 - 第三章内容</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh; color: #333; padding: 20px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .container { max-width: 1400px; margin: 0 auto; }
-        .header { text-align: center; margin-bottom: 40px; color: white; }
-        .header h1 { font-size: 2.5rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-        .header p { font-size: 1.2rem; opacity: 0.9; }
-        .controls { background: white; padding: 20px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
-        .chart-type-selector { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .chart-btn { padding: 15px; border: none; border-radius: 10px; background: linear-gradient(45deg, #667eea, #764ba2); color: white; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; font-weight: 600; }
-        .chart-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        .chart-btn.active { background: linear-gradient(45deg, #f093fb, #f5576c); transform: translateY(-2px); }
-        .chart-container { background: white; padding: 30px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); min-height: 500px; }
-        .chart-wrapper { width: 100%; height: 500px; position: relative; }
-        .description { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px; border-left: 4px solid #667eea; }
-        .description h3 { color: #667eea; margin-bottom: 10px; }
-        .data-controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
-        .control-group { display: flex; align-items: center; gap: 10px; }
-        .control-group label { font-weight: 600; color: #555; }
-        .control-group select, .control-group input { padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 5px; font-size: 0.9rem; }
-        .control-group input { width: 80px; }
-        .hidden { display: none; }
-        @media (max-width: 768px) {
-            .chart-type-selector { grid-template-columns: 1fr; }
-            .chart-container { padding: 15px; }
-            .chart-wrapper { height: 400px; }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 50px 20px;
+        }
+        
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .platform-link {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 20px 40px;
+            margin: 20px;
+            text-decoration: none;
+            color: white;
+            font-size: 1.3em;
+            transition: all 0.3s ease;
+        }
+        
+        .platform-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .features {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 40px;
+            text-align: left;
+        }
+        
+        .features h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .features li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .features li:last-child {
+            border-bottom: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>📊 交互式数据可视化平台</h1>
-            <p>基于Jupyter笔记本内容 - 多种图表类型完整展示</p>
-        </div>
+        <h1>📊 数据可视化平台</h1>
+        <p>基于第三章Jupyter笔记本内容的交互式数据可视化</p>
         
-        <div class="controls">
-            <div class="chart-type-selector">
-                <button class="chart-btn active" onclick="showChart('bar')">📊 单组柱形图</button>
-                <button class="chart-btn" onclick="showChart('multiBar')">📊 多组柱形图</button>
-                <button class="chart-btn" onclick="showChart('line')">📈 折线图</button>
-                <button class="chart-btn" onclick="showChart('pie')">🥧 饼图</button>
-                <button class="chart-btn" onclick="showChart('radar')">🛰️ 雷达图</button>
-                <button class="chart-btn" onclick="showChart('scatter')">🔵 散点图</button>
-                <button class="chart-btn" onclick="showChart('area')">📈 面积图</button>
-                <button class="chart-btn" onclick="showChart('histogram')">📊 直方图</button>
-                <button class="chart-btn" onclick="showChart('box')">📦 箱形图</button>
-                <button class="chart-btn" onclick="showChart('errorBar')">📏 误差棒图</button>
-            </div>
-            
-            <div class="data-controls">
-                <div class="control-group">
-                    <label for="dataset">数据集:</label>
-                    <select id="dataset" onchange="updateChart()">
-                        <option value="sales">电商销售额</option>
-                        <option value="revenue">公司营收利润</option>
-                        <option value="product">产品性能对比</option>
-                        <option value="city">城市消费支出</option>
-                    </select>
-                </div>
-                <div class="control-group">
-                    <label for="animationSpeed">动画速度:</label>
-                    <input type="range" id="animationSpeed" min="0" max="100" value="50" onchange="updateAnimation()">
-                </div>
-            </div>
-        </div>
-
-        <!-- 图表容器 -->
-        <div class="chart-container">
-            <div class="chart-wrapper">
-                <canvas id="myChart"></canvas>
-            </div>
-            <div class="description">
-                <h3>图表说明</h3>
-                <p id="chartDescription">单组柱形图 - 展示电商平台5个品类的月销售额统计</p>
-            </div>
+        <a href="chapter3_interactive.html" class="platform-link">
+            🚀 进入交互式可视化平台
+        </a>
+        
+        <div class="features">
+            <h2>平台特色功能</h2>
+            <ul>
+                <li>📈 <strong>5种图表类型</strong> - 三角函数图、零件质量分布、电影票房排行、散点图、趋势分析</li>
+                <li>🔄 <strong>交互式操作</strong> - 图表切换、数据集选择、动画控制</li>
+                <li>📱 <strong>响应式设计</strong> - 支持电脑、平板、手机等设备</li>
+                <li>🎨 <strong>美观界面</strong> - 现代化渐变背景和卡片式布局</li>
+                <li>⚡ <strong>稳定性优化</strong> - 完整的错误处理和容错机制</li>
+            </ul>
         </div>
     </div>
-
-    <script>
-        let currentChart = null;
-        let currentType = 'bar';
-
-        // 数据集定义
-        const datasets = {
-            sales: {
-                labels: ['电子产品', '服装鞋帽', '家居百货', '美妆个护', '食品生鲜'],
-                data: [550, 420, 280, 390, 610],
-                label: '销售额（万元）',
-                description: '电商平台5个品类的月销售额统计'
-            },
-            revenue: {
-                labels: ['2019', '2020', '2021', '2022', '2023', '2024', '2025'],
-                data: [
-                    [2.5, 3.1, 4.0, 5.2, 6.5, 7.8, 8.5], // 营收
-                    [0.5, 0.7, 0.9, 1.3, 1.8, 2.2, 2.5]  // 利润
-                ],
-                labels2: ['营收（亿元）', '利润（亿元）'],
-                description: '某公司营收和利润年度变化趋势'
-            },
-            product: {
-                labels: ['性能', '设计', '续航', '价格', '服务'],
-                data: [
-                    [9.0, 7.5, 8.0, 6.5, 9.0], // 产品A
-                    [7.0, 8.5, 7.5, 8.0, 9.0]  // 产品B
-                ],
-                labels2: ['产品A', '产品B'],
-                description: '两款产品关键性能指标对比'
-            },
-            city: {
-                labels: ['北京', '上海', '广州', '深圳'],
-                data: [
-                    [12000, 11500, 9800, 10500], // Q1支出
-                    [13500, 12800, 10900, 11900]  // Q2支出
-                ],
-                labels2: ['Q1支出', 'Q2支出'],
-                description: '4个城市两季度人均消费支出对比'
-            }
-        };
-
-        // 显示图表
-        function showChart(type) {
-            currentType = type;
-            
-            // 更新按钮状态
-            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            updateChart();
-        }
-
-        // 更新图表
-        function updateChart() {
-            const datasetName = document.getElementById('dataset').value;
-            const dataset = datasets[datasetName];
-            
-            if (currentChart) {
-                currentChart.destroy();
-            }
-            
-            const ctx = document.getElementById('myChart').getContext('2d');
-            
-            // 根据图表类型创建不同的配置
-            let config = {};
-            
-            switch(currentType) {
-                case 'bar':
-                    config = createBarConfig(dataset);
-                    break;
-                case 'multiBar':
-                    config = createMultiBarConfig(dataset);
-                    break;
-                case 'line':
-                    config = createLineConfig(dataset);
-                    break;
-                case 'pie':
-                    config = createPieConfig(dataset);
-                    break;
-                case 'radar':
-                    config = createRadarConfig(dataset);
-                    break;
-                case 'scatter':
-                    config = createScatterConfig(dataset);
-                    break;
-                case 'area':
-                    config = createAreaConfig(dataset);
-                    break;
-                case 'histogram':
-                    config = createHistogramConfig(dataset);
-                    break;
-                case 'box':
-                    config = createBoxConfig(dataset);
-                    break;
-                case 'errorBar':
-                    config = createErrorBarConfig(dataset);
-                    break;
-            }
-            
-            currentChart = new Chart(ctx, config);
-            document.getElementById('chartDescription').textContent = dataset.description;
-        }
-
-        // 创建柱形图配置
-        function createBarConfig(dataset) {
-            return {
-                type: 'bar',
-                data: {
-                    labels: dataset.labels,
-                    datasets: [{
-                        label: dataset.label || '数据',
-                        data: dataset.data,
-                        backgroundColor: [
-                            '#4a90e2', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6'
-                        ],
-                        borderColor: [
-                            '#4a90e2', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: getAnimationDuration()
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: dataset.description,
-                            font: { size: 16 }
-                        },
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: dataset.label || '数值'
-                            }
-                        }
-                    }
-                }
-            };
-        }
-
-        // 创建多组柱形图配置
-        function createMultiBarConfig(dataset) {
-            return {
-                type: 'bar',
-                data: {
-                    labels: dataset.labels,
-                    datasets: dataset.data.map((data, index) => ({
-                        label: dataset.labels2[index],
-                        data: data,
-                        backgroundColor: index === 0 ? '#e74c3c' : '#3498db',
-                        borderColor: index === 0 ? '#e74c3c' : '#3498db',
-                        borderWidth: 1
-                    }))
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: getAnimationDuration()
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: dataset.description,
-                            font: { size: 16 }
-                        }
-                    }
-                }
-            };
-        }
-
-        // 创建折线图配置
-        function createLineConfig(dataset) {
-            return {
-                type: 'line',
-                data: {
-                    labels: dataset.labels,
-                    datasets: dataset.data.map((data, index) => ({
-                        label: dataset.labels2[index],
-                        data: data,
-                        borderColor: index === 0 ? '#4a90e2' : '#f39c12',
-                        backgroundColor: 'transparent',
-                        borderWidth: 3,
-                        pointRadius: 6,
-                        pointBackgroundColor: index === 0 ? '#4a90e2' : '#f39c12',
-                        tension: 0.1
-                    }))
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: getAnimationDuration()
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: dataset.description,
-                            font: { size: 16 }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            };
-        }
-
-        // 创建饼图配置
-        function createPieConfig(dataset) {
-            return {
-                type: 'pie',
-                data: {
-                    labels: dataset.labels,
-                    datasets: [{
-                        data: dataset.data,
-                        backgroundColor: [
-                            '#4a90e2', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6'
-                        ],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: getAnimationDuration()
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: dataset.description,
-                            font: { size: 16 }
-                        },
-                        legend: {
-                            position: 'right'
-                        }
-                    }
-                }
-            };
-        }
-
-        // 创建雷达图配置
-        function createRadarConfig(dataset) {
-            return {
-                type: 'radar',
-                data: {
-                    labels: dataset.labels,
-                    datasets: dataset.data.map((data, index) => ({
-                        label: dataset.labels2[index],
-                        data: data,
-                        backgroundColor: index === 0 ? 'rgba(74, 144, 226, 0.2)' : 'rgba(243, 156, 18, 0.2)',
-                        borderColor: index === 0 ? '#4a90e2' : '#f39c12',
-                        borderWidth: 2,
-                        pointBackgroundColor: index === 0 ? '#4a90e2' : '#f39c12'
-                    }))
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: getAnimationDuration()
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: dataset.description,
-                            font: { size: 16 }
-                        }
-                    },
-                    scales: {
-                        r: {
-                            beginAtZero: true,
-                            max: 10
-                        }
-                    }
-                }
-            };
-        }
-
-        // 创建散点图配置
-        function createScatterConfig(dataset) {
-            // 为散点图生成合适的坐标数据
-            const scatterData = [];
-            const baseData = Array.isArray(dataset.data[0]) ? dataset.data[0] : dataset.data;
-            
-            baseData.forEach((value, index) => {
-                scatterData.push({
-                    x: value,
-                    y: (Array.isArray(dataset.data[1]) ? dataset.data[1][index] : value * 0.8 + Math.random() * 20)
-                });
-            });
-            
-            return {
-                type: 'scatter',
-                data: {
-                    datasets: [{
-                        label: '散点分布',
-                        data: scatterData,
-                        backgroundColor: '#4a90e2',
-                        borderColor: '#4a90e2',
-                        pointRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: getAnimationDuration()
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: dataset.description + ' - 散点分布',
-                            font: { size: 16 }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'X轴'
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Y轴'
-                            }
-                        }
-                    }
-                }
-            };
-        }
-
-        // 创建面积图配置
-        function createAreaConfig(dataset) {
-            return {
-                type: 'line',
-                data: {
-                    labels: dataset.labels,
-                    datasets: dataset.data.map((data, index) => ({
-                        label: dataset.labels2[index],
-                        data: data,
-                        borderColor: index === 0 ? '#4a90e2' : '#f39c12',
-                        backgroundColor: index === 0 ? 'rgba(74, 144, 226, 0.3)' : 'rgba(243, 156, 18, 0.3)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.1
-                    }))
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: getAnimationDuration()
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: dataset.description,
-                            font: { size: 16 }
-                        }
-                    }
-                }
-            };
-        }
-
-        // 创建直方图配置
-        function createHistogramConfig(dataset) {
-            return {
-                type: 'bar',
-                data: {
-                    labels: dataset.labels,
-                    datasets: [{
-                        label: '频率分布',
-                        data: dataset.data,
-                        backgroundColor: '#9b59b6',
-                        borderColor: '#9b59b6',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: getAnimationDuration()
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: dataset.description + ' - 频率分布',
-                            font: { size: 16 }
-                        }
-                    }
-                }
-            };
-        }
-
-        // 创建箱形图配置
-        function createBoxConfig(dataset) {
-            // 为箱形图生成合适的数据格式 - 使用正确的箱形图数据结构
-            const boxData = dataset.data.map(value => {
-                // 生成围绕中心值的随机分布数据点
-                const center = value;
-                const dataPoints = [];
-                for (let i = 0; i < 20; i++) {
-                    dataPoints.push(center * (0.8 + Math.random() * 0.4));
-                }
-                return dataPoints;
-            });
-            
-            return {
-                type: 'boxplot',
-                data: {
-                    labels: dataset.labels,
-                    datasets: [{
-                        label: '数据分布',
-                        data: boxData,
-                        backgroundColor: 'rgba(74, 144, 226, 0.2)',
-                        borderColor: '#4a90e2',
-                        borderWidth: 2,
-                        outlierColor: '#e74c3c',
-                        outlierRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: getAnimationDuration()
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: dataset.description + ' - 箱形图',
-                            font: { size: 16 }
-                        }
-                    }
-                }
-            };
-        }
-
-        // 创建误差棒图配置
-        function createErrorBarConfig(dataset) {
-            // 为误差棒图生成误差数据
-            const baseData = Array.isArray(dataset.data[0]) ? dataset.data[0] : dataset.data;
-            const errorData = baseData.map(value => ({
-                y: value,
-                yMin: value * 0.9,
-                yMax: value * 1.1
-            }));
-            
-            return {
-                type: 'bar',
-                data: {
-                    labels: dataset.labels,
-                    datasets: [{
-                        label: '数据值',
-                        data: errorData,
-                        backgroundColor: '#2ecc71',
-                        borderColor: '#2ecc71',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: getAnimationDuration()
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: dataset.description + ' - 误差棒图',
-                            font: { size: 16 }
-                        }
-                    }
-                }
-            };
-        }
-
-        // 获取动画速度
-        function getAnimationDuration() {
-            const speed = document.getElementById('animationSpeed').value;
-            return 2000 - (speed * 18); // 2000ms到200ms的范围
-        }
-
-        // 更新动画速度
-        function updateAnimation() {
-            if (currentChart) {
-                currentChart.options.animation.duration = getAnimationDuration();
-                currentChart.update();
-            }
-        }
-
-        // 初始化页面
-        window.onload = function() {
-            updateChart();
-        };
-    </script>
 </body>
 </html>
