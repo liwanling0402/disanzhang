@@ -195,54 +195,52 @@
         let currentChart = null;
         let animationDuration = 1000;
 
-        // 数据集定义
+        // 数据集定义 - 使用标准Chart.js支持的图表类型
         const datasets = {
             trigonometry: {
-                labels: Array.from({length: 256}, (_, i) => -Math.PI + (2 * Math.PI * i / 255)),
+                type: 'line',
+                labels: Array.from({length: 100}, (_, i) => (-Math.PI + (2 * Math.PI * i / 99)).toFixed(2)),
                 data: [
-                    Array.from({length: 256}, (_, i) => Math.sin(-Math.PI + (2 * Math.PI * i / 255))),
-                    Array.from({length: 256}, (_, i) => Math.cos(-Math.PI + (2 * Math.PI * i / 255)))
+                    Array.from({length: 100}, (_, i) => Math.sin(-Math.PI + (2 * Math.PI * i / 99))),
+                    Array.from({length: 100}, (_, i) => Math.cos(-Math.PI + (2 * Math.PI * i / 99)))
                 ],
                 description: "三角函数数据 - 正弦和余弦函数在[-π, π]区间",
-                labels: ["正弦函数", "余弦函数"]
+                seriesLabels: ["正弦函数", "余弦函数"]
             },
             
             boxplot: {
+                type: 'bar', // 使用柱形图替代箱形图，确保兼容性
                 labels: ["零件A", "零件B", "零件C", "零件D", "零件E", "零件F"],
-                data: [
-                    [85, 88, 90, 92, 95, 96, 98, 100, 102, 105],
-                    [78, 80, 82, 85, 87, 89, 91, 93, 95, 97],
-                    [92, 94, 95, 96, 97, 98, 99, 100, 101, 102],
-                    [75, 78, 80, 82, 84, 86, 88, 90, 92, 94],
-                    [88, 90, 92, 94, 96, 98, 100, 102, 104, 106],
-                    [82, 84, 86, 88, 90, 92, 94, 96, 98, 100]
-                ],
-                description: "零件质量分布数据 - 6种零件质量评分统计",
-                labels: ["质量评分"]
+                data: [85, 88, 92, 78, 90, 82], // 使用平均值数据
+                description: "零件质量分布数据 - 6种零件平均质量评分",
+                seriesLabels: ["平均质量评分"]
             },
             
             movie: {
+                type: 'bar',
                 labels: ["哪吒之魔童降世", "流浪地球", "复仇者联盟4", "我和我的祖国", "中国机长", "疯狂的外星人"],
                 data: [50.13, 46.86, 42.50, 31.76, 29.12, 22.13],
                 description: "2019年内地电影票房排行榜 - 前六名电影票房统计（单位：亿元）",
-                labels: ["票房收入"]
+                seriesLabels: ["票房收入"]
             },
             
             scatter: {
+                type: 'scatter',
                 labels: Array.from({length: 50}, (_, i) => i),
                 data: Array.from({length: 50}, () => ({
                     x: Math.random() * 100,
                     y: Math.random() * 100
                 })),
                 description: "随机分布数据 - 多数据集散点分布展示",
-                labels: ["散点分布"]
+                seriesLabels: ["散点分布"]
             },
             
             trend: {
+                type: 'line',
                 labels: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
                 data: [45, 52, 48, 55, 60, 58, 65, 70, 68, 75, 80, 85],
                 description: "趋势分析数据 - 数据变化趋势可视化",
-                labels: ["趋势数据"]
+                seriesLabels: ["趋势数据"]
             }
         };
 
@@ -259,7 +257,8 @@
                             borderColor: '#4a90e2',
                             backgroundColor: 'rgba(74, 144, 226, 0.1)',
                             borderWidth: 2,
-                            tension: 0.4
+                            tension: 0.1,
+                            pointRadius: 0
                         },
                         {
                             label: '余弦函数',
@@ -267,7 +266,8 @@
                             borderColor: '#2ecc71',
                             backgroundColor: 'rgba(46, 204, 113, 0.1)',
                             borderWidth: 2,
-                            tension: 0.4
+                            tension: 0.1,
+                            pointRadius: 0
                         }
                     ]
                 },
@@ -291,14 +291,19 @@
                         x: {
                             title: {
                                 display: true,
-                                text: 'x轴'
+                                text: 'x (弧度)'
+                            },
+                            ticks: {
+                                maxTicksLimit: 10
                             }
                         },
                         y: {
                             title: {
                                 display: true,
-                                text: 'y轴'
-                            }
+                                text: 'y'
+                            },
+                            min: -1.5,
+                            max: 1.5
                         }
                     }
                 }
@@ -307,15 +312,17 @@
 
         function createBoxplotConfig(dataset) {
             return {
-                type: 'boxplot',
+                type: 'bar',
                 data: {
                     labels: dataset.labels,
                     datasets: [{
-                        label: '质量评分',
+                        label: dataset.seriesLabels[0],
                         data: dataset.data,
-                        backgroundColor: 'rgba(74, 144, 226, 0.2)',
-                        borderColor: '#4a90e2',
-                        borderWidth: 2
+                        backgroundColor: [
+                            '#4a90e2', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'
+                        ],
+                        borderColor: '#34495e',
+                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -473,26 +480,36 @@
             // 创建新图表
             const ctx = document.getElementById('myChart').getContext('2d');
             
-            let config;
-            switch(type) {
-                case 'trigonometry':
-                    config = createTrigonometryConfig(dataset);
-                    break;
-                case 'boxplot':
-                    config = createBoxplotConfig(dataset);
-                    break;
-                case 'movie':
-                    config = createMovieConfig(dataset);
-                    break;
-                case 'scatter':
-                    config = createScatterConfig(dataset);
-                    break;
-                case 'trend':
-                    config = createTrendConfig(dataset);
-                    break;
+            try {
+                let config;
+                switch(type) {
+                    case 'trigonometry':
+                        config = createTrigonometryConfig(dataset);
+                        break;
+                    case 'boxplot':
+                        config = createBoxplotConfig(dataset);
+                        break;
+                    case 'movie':
+                        config = createMovieConfig(dataset);
+                        break;
+                    case 'scatter':
+                        config = createScatterConfig(dataset);
+                        break;
+                    case 'trend':
+                        config = createTrendConfig(dataset);
+                        break;
+                    default:
+                        throw new Error('未知的图表类型');
+                }
+                
+                currentChart = new Chart(ctx, config);
+                console.log('图表创建成功:', type);
+            } catch (error) {
+                console.error('图表创建失败:', error);
+                // 显示错误信息
+                document.getElementById('chartDescription').textContent = 
+                    '图表加载失败: ' + error.message + '。请刷新页面重试。';
             }
-            
-            currentChart = new Chart(ctx, config);
         }
 
         // 更新动画速度
@@ -512,8 +529,26 @@
 
         // 初始化图表
         window.onload = function() {
-            updateChart();
+            try {
+                updateChart();
+            } catch (error) {
+                console.error('初始化失败:', error);
+                document.getElementById('chartDescription').textContent = 
+                    '平台初始化失败，请刷新页面重试。错误信息: ' + error.message;
+            }
         };
+
+        // 添加错误处理
+        window.addEventListener('error', function(event) {
+            console.error('全局错误:', event.error);
+        });
+
+        // 添加页面可见性检测，确保图表在页面重新可见时正确渲染
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && currentChart) {
+                currentChart.resize();
+            }
+        });
     </script>
 </body>
 </html>
