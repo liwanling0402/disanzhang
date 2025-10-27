@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第三章数据可视化平台 - 独立版本</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .control-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .chart-type-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .chart-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+        }
+        
+        .chart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .chart-btn.active {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+        }
+        
+        .dataset-selector {
+            margin-bottom: 20px;
+        }
+        
+        .dataset-selector select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            background: white;
+        }
+        
+        .animation-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .animation-control label {
+            font-weight: bold;
+        }
+        
+        .animation-control input {
+            flex: 1;
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            height: 500px;
+        }
+        
+        .description {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .description h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .description p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .status-message {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            color: #721c24;
+        }
+        
+        @media (max-width: 768px) {
+            .chart-type-selector {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                height: 400px;
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 第三章数据可视化平台</h1>
+            <p>独立版本 - 无需服务器，直接在浏览器中运行</p>
+        </div>
+        
+        <div class="status-message" id="statusMessage">
+            平台正在加载...请稍候
+        </div>
+        
+        <div class="control-panel">
+            <div class="chart-type-selector">
+                <button class="chart-btn active" onclick="switchChartType('trigonometry')">三角函数图</button>
+                <button class="chart-btn" onclick="switchChartType('boxplot')">零件质量分布</button>
+                <button class="chart-btn" onclick="switchChartType('movie')">电影票房排行</button>
+                <button class="chart-btn" onclick="switchChartType('scatter')">散点分布图</button>
+                <button class="chart-btn" onclick="switchChartType('trend')">趋势分析图</button>
+            </div>
+            
+            <div class="dataset-selector">
+                <select id="datasetSelect" onchange="updateChart()">
+                    <option value="trigonometry">三角函数数据</option>
+                    <option value="boxplot">零件质量分布数据</option>
+                    <option value="movie">2019年电影票房数据</option>
+                    <option value="scatter">随机分布数据</option>
+                    <option value="trend">趋势分析数据</option>
+                </select>
+            </div>
+            
+            <div class="animation-control">
+                <label for="animationSpeed">动画速度:</label>
+                <input type="range" id="animationSpeed" min="0" max="2000" value="1000" onchange="updateAnimationSpeed()">
+                <span id="speedValue">中等</span>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="myChart"></canvas>
+        </div>
+        
+        <div class="description">
+            <h3>📈 图表说明</h3>
+            <p id="chartDescription">基于第三章Jupyter笔记本内容创建的交互式数据可视化平台。</p>
+            <p><strong>使用说明：</strong>点击顶部按钮切换图表类型，使用下拉菜单选择不同数据集</p>
+            <p><strong>兼容性：</strong>支持所有现代浏览器，无需额外安装</p>
+        </div>
+    </div>
+
+    <script>
+        let currentChart = null;
+        let animationDuration = 1000;
+
+        // 数据集定义 - 使用标准Chart.js支持的图表类型
+        const datasets = {
+            trigonometry: {
+                type: 'line',
+                labels: Array.from({length: 100}, (_, i) => (-Math.PI + (2 * Math.PI * i / 99)).toFixed(2)),
+                data: [
+                    Array.from({length: 100}, (_, i) => Math.sin(-Math.PI + (2 * Math.PI * i / 99))),
+                    Array.from({length: 100}, (_, i) => Math.cos(-Math.PI + (2 * Math.PI * i / 99)))
+                ],
+                description: "三角函数数据 - 正弦和余弦函数在[-π, π]区间",
+                seriesLabels: ["正弦函数", "余弦函数"]
+            },
+            
+            boxplot: {
+                type: 'bar',
+                labels: ["零件A", "零件B", "零件C", "零件D", "零件E", "零件F"],
+                data: [85, 88, 92, 78, 90, 82],
+                description: "零件质量分布数据 - 6种零件平均质量评分",
+                seriesLabels: ["平均质量评分"]
+            },
+            
+            movie: {
+                type: 'bar',
+                labels: ["哪吒之魔童降世", "流浪地球", "复仇者联盟4", "我和我的祖国", "中国机长", "疯狂的外星人"],
+                data: [50.13, 46.86, 42.50, 31.76, 29.12, 22.13],
+                description: "2019年内地电影票房排行榜 - 前六名电影票房统计（单位：亿元）",
+                seriesLabels: ["票房收入"]
+            },
+            
+            scatter: {
+                type: 'scatter',
+                labels: Array.from({length: 50}, (_, i) => i),
+                data: Array.from({length: 50}, () => ({
+                    x: Math.random() * 100,
+                    y: Math.random() * 100
+                })),
+                description: "随机分布数据 - 多数据集散点分布展示",
+                seriesLabels: ["散点分布"]
+            },
+            
+            trend: {
+                type: 'line',
+                labels: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
+                data: [45, 52, 48, 55, 60, 58, 65, 70, 68, 75, 80, 85],
+                description: "趋势分析数据 - 数据变化趋势可视化",
+                seriesLabels: ["趋势数据"]
+            }
+        };
+
+        // 图表配置函数
+        function createTrigonometryConfig(dataset) {
+            return {
+                type: 'line',
+                data: {
+                    labels: dataset.labels,
+                    datasets: [
+                        {
+                            label: '正弦函数',
+                            data: dataset.data[0],
+                            borderColor: '#4a90e2',
+                            backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '余弦函数',
+                            data: dataset.data[1],
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: animationDuration
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: dataset.description,
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'x (弧度)'
+                            },
+                            ticks: {
+                                maxTicksLimit: 10
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'y'
+                            },
+                            min: -1.5,
+                            max: 1.5
+                        }
+                    }
+                }
+            };
+        }
+
+        function createBoxplotConfig(dataset) {
+            return {
+                type: 'bar',
+                data: {
+                    labels: dataset.labels,
+                    datasets: [{
+                        label: dataset.seriesLabels[0],
+                        data: dataset.data,
+                        backgroundColor: [
+                            '#4a90e2', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'
+                        ],
+                        borderColor: '#34495e',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: animationDuration
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: dataset.description,
+                            font: { size: 16 }
+                        }
+                    }
+                }
+            };
+        }
+
+        function createMovieConfig(dataset) {
+            return {
+                type: 'bar',
+                data: {
+                    labels: dataset.labels,
+                    datasets: [{
+                        label: dataset.seriesLabels[0],
+                        data: dataset.data,
+                        backgroundColor: [
+                            '#4a90e2', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'
+                        ],
+                        borderColor: '#34495e',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: animationDuration
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: dataset.description,
+                            font: { size: 16 }
+                        }
+                    }
+                }
+            };
+        }
+
+        function createScatterConfig(dataset) {
+            return {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: dataset.seriesLabels[0],
+                        data: dataset.data,
+                        backgroundColor: '#4a90e2',
+                        borderColor: '#4a90e2',
+                        pointRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: animationDuration
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: dataset.description,
+                            font: { size: 16 }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'X轴'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Y轴'
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        function createTrendConfig(dataset) {
+            return {
+                type: 'line',
+                data: {
+                    labels: dataset.labels,
+                    datasets: [{
+                        label: dataset.seriesLabels[0],
+                        data: dataset.data,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: animationDuration
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: dataset.description,
+                            font: { size: 16 }
+                        }
+                    }
+                }
+            };
+        }
+
+        // 切换图表类型
+        function switchChartType(type) {
+            document.querySelectorAll('.chart-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.getElementById('datasetSelect').value = type;
+            updateChart();
+        }
+
+        // 更新图表
+        function updateChart() {
+            const type = document.getElementById('datasetSelect').value;
+            const dataset = datasets[type];
+            
+            document.getElementById('chartDescription').textContent = dataset.description;
+            
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            const ctx = document.getElementById('myChart').getContext('2d');
+            
+            try {
+                let config;
+                switch(type) {
+                    case 'trigonometry':
+                        config = createTrigonometryConfig(dataset);
+                        break;
+                    case 'boxplot':
+                        config = createBoxplotConfig(dataset);
+                        break;
+                    case 'movie':
+                        config = createMovieConfig(dataset);
+                        break;
+                    case 'scatter':
+                        config = createScatterConfig(dataset);
+                        break;
+                    case 'trend':
+                        config = createTrendConfig(dataset);
+                        break;
+                    default:
+                        throw new Error('未知的图表类型');
+                }
+                
+                currentChart = new Chart(ctx, config);
+                document.getElementById('statusMessage').innerHTML = 
+                    '<span style="color: green;">✅ 图表加载成功！</span>';
+            } catch (error) {
+                console.error('图表创建失败:', error);
+                document.getElementById('statusMessage').innerHTML = 
+                    '<span style="color: red;">❌ 图表加载失败: ' + error.message + '</span>';
+            }
+        }
+
+        // 更新动画速度
+        function updateAnimationSpeed() {
+            const speed = parseInt(document.getElementById('animationSpeed').value);
+            animationDuration = speed;
+            
+            let speedText = '快速';
+            if (speed > 1500) speedText = '慢速';
+            else if (speed > 500) speedText = '中等';
+            document.getElementById('speedValue').textContent = speedText;
+            
+            updateChart();
+        }
+
+        // 初始化图表
+        window.onload = function() {
+            try {
+                if (typeof Chart === 'undefined') {
+                    throw new Error('Chart.js库加载失败');
+                }
+                updateChart();
+            } catch (error) {
+                document.getElementById('statusMessage').innerHTML = 
+                    '<span style="color: red;">❌ 初始化失败: ' + error.message + '</span>';
+            }
+        };
+    </script>
+</body>
+</html>
