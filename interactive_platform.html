@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第三章数据可视化平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .control-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .chart-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .chart-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            background: #f8f9fa;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .chart-btn:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+        
+        .chart-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .dataset-selector {
+            margin-bottom: 20px;
+        }
+        
+        .dataset-selector select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .animation-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .animation-control label {
+            font-weight: 600;
+        }
+        
+        .animation-control input {
+            flex: 1;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            min-height: 500px;
+        }
+        
+        .description {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .description h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        
+        .description p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .data-source {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .chart-type-selector {
+                justify-content: center;
+            }
+            
+            .chart-btn {
+                flex: 1;
+                min-width: 120px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 第三章数据可视化平台</h1>
+            <p>基于第三章Jupyter笔记本内容创建的交互式数据可视化平台</p>
+        </div>
+        
+        <div class="control-panel">
+            <div class="chart-type-selector">
+                <button class="chart-btn active" onclick="switchChartType('trigonometry')">三角函数图</button>
+                <button class="chart-btn" onclick="switchChartType('movie')">电影票房排行</button>
+                <button class="chart-btn" onclick="switchChartType('boxplot')">零件质量分布</button>
+                <button class="chart-btn" onclick="switchChartType('scatter')">散点分布图</button>
+                <button class="chart-btn" onclick="switchChartType('trend')">趋势分析图</button>
+            </div>
+            
+            <div class="dataset-selector">
+                <select id="datasetSelect" onchange="updateChart()">
+                    <option value="trigonometry">三角函数数据</option>
+                    <option value="movie">2019年电影票房数据</option>
+                    <option value="boxplot">零件质量分布数据</option>
+                    <option value="scatter">随机分布数据</option>
+                    <option value="trend">趋势分析数据</option>
+                </select>
+            </div>
+            
+            <div class="animation-control">
+                <label for="animationSpeed">动画速度:</label>
+                <input type="range" id="animationSpeed" min="1" max="10" value="5" onchange="updateAnimationSpeed()">
+                <span id="speedValue">中等</span>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="myChart"></canvas>
+        </div>
+        
+        <div class="description">
+            <h3>📈 图表说明</h3>
+            <p id="chartDescription">基于第三章Jupyter笔记本内容创建的交互式数据可视化平台。当前显示三角函数数据可视化。</p>
+            <p><strong>数据来源：</strong>第三章Jupyter笔记本中的真实示例数据</p>
+            <p><strong>交互功能：</strong>点击顶部按钮切换图表类型，使用下拉菜单选择不同数据集，拖动滑块调整动画速度</p>
+            
+            <div class="data-source">
+                <h4>📋 数据详情</h4>
+                <div id="dataDetails">
+                    <p><strong>三角函数数据：</strong>正弦和余弦函数在[-π, π]区间，包含256个数据点</p>
+                    <p><strong>电影票房数据：</strong>2019年内地电影票房排行榜前6名电影票房统计</p>
+                    <p><strong>零件质量数据：</strong>6种零件质量评分分布统计</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentChart = null;
+        let animationSpeed = 5;
+        
+        // 数据集定义 - 基于第三章真实数据
+        const datasets = {
+            trigonometry: {
+                type: 'line',
+                labels: Array.from({length: 256}, (_, i) => (-Math.PI + (2 * Math.PI * i / 255)).toFixed(3)),
+                data: [
+                    Array.from({length: 256}, (_, i) => Math.sin(-Math.PI + (2 * Math.PI * i / 255))),
+                    Array.from({length: 256}, (_, i) => Math.cos(-Math.PI + (2 * Math.PI * i / 255)))
+                ],
+                description: "三角函数数据 - 正弦和余弦函数在[-π, π]区间（256个数据点）",
+                seriesLabels: ["正弦函数", "余弦函数"]
+            },
+            
+            movie: {
+                type: 'bar',
+                labels: ["哪吒之魔童降世", "流浪地球", "复仇者联盟4:终局之战", "疯狂的外星人", "飞驰人生", "烈火英雄", "蜘蛛侠:英雄远征", "速度与激情:特别行动", "扫毒2天地对决", "大黄蜂"],
+                data: [50.35, 46.86, 42.50, 22.13, 17.16, 13.30, 12.44, 14.18, 11.38, 11.38],
+                description: "2019年内地电影票房排行榜 - 前十名电影票房统计（单位：亿元）",
+                seriesLabels: ["票房收入"]
+            },
+            
+            boxplot: {
+                type: 'boxplot',
+                labels: ["零件A", "零件B", "零件C", "零件D", "零件E", "零件F"],
+                data: [
+                    [82, 84, 85, 86, 88],  // 零件A的5个质量评分
+                    [85, 87, 88, 89, 91],  // 零件B
+                    [90, 91, 92, 93, 95],  // 零件C
+                    [75, 76, 78, 79, 82],  // 零件D
+                    [87, 88, 90, 91, 94],  // 零件E
+                    [80, 81, 82, 83, 84]   // 零件F
+                ],
+                description: "零件质量分布数据 - 6种零件质量评分箱形图分析",
+                seriesLabels: ["零件A", "零件B", "零件C", "零件D", "零件E", "零件F"]
+            },
+            
+            scatter: {
+                type: 'scatter',
+                labels: Array.from({length: 100}, (_, i) => i),
+                data: [
+                    Array.from({length: 100}, () => Math.random() * 100),
+                    Array.from({length: 100}, () => Math.random() * 100)
+                ],
+                description: "随机分布数据 - 100个随机数据点散点图展示",
+                seriesLabels: ["随机数据集1", "随机数据集2"]
+            },
+            
+            trend: {
+                type: 'line',
+                labels: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
+                data: [
+                    [4605.2, 4710.3, 5168.9, 4767.2, 4947, 5203, 6047.4, 5945.5, 5219.6, 5038.1, 5196.3, 5698.6],
+                    [4200.1, 4500.5, 4800.8, 5100.2, 5400.7, 5700.9, 6000.3, 6300.6, 6600.1, 6900.4, 7200.8, 7500.2]
+                ],
+                description: "趋势分析数据 - 2018年与2019年月度数据对比分析",
+                seriesLabels: ["2018年数据", "2019年数据"]
+            }
+        };
+        
+        // 初始化图表
+        function initChart() {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            const dataset = datasets.trigonometry;
+            
+            currentChart = new Chart(ctx, {
+                type: dataset.type,
+                data: {
+                    labels: dataset.labels,
+                    datasets: dataset.data.map((data, index) => ({
+                        label: dataset.seriesLabels[index],
+                        data: data,
+                        borderColor: getColor(index),
+                        backgroundColor: getColor(index, 0.2),
+                        borderWidth: 2,
+                        pointRadius: dataset.type === 'scatter' ? 5 : 0,
+                        fill: dataset.type === 'line' && index === 0 ? false : true
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1000 / animationSpeed
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: dataset.description,
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'x轴'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'y轴'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            updateDescription('trigonometry');
+        }
+        
+        // 切换图表类型
+        function switchChartType(type) {
+            // 更新按钮状态
+            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 更新下拉菜单
+            document.getElementById('datasetSelect').value = type;
+            
+            updateChart();
+        }
+        
+        // 更新图表
+        function updateChart() {
+            const type = document.getElementById('datasetSelect').value;
+            const dataset = datasets[type];
+            
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            const ctx = document.getElementById('myChart').getContext('2d');
+            
+            // 处理不同类型图表的数据结构
+            let chartData;
+            if (dataset.type === 'boxplot') {
+                // 箱形图特殊处理
+                chartData = {
+                    labels: dataset.labels,
+                    datasets: dataset.data.map((data, index) => ({
+                        label: dataset.seriesLabels[index],
+                        data: data,
+                        backgroundColor: getColor(index, 0.3),
+                        borderColor: getColor(index),
+                        borderWidth: 2
+                    }))
+                };
+            } else if (Array.isArray(dataset.data[0])) {
+                // 多系列数据
+                chartData = {
+                    labels: dataset.labels,
+                    datasets: dataset.data.map((data, index) => ({
+                        label: dataset.seriesLabels[index],
+                        data: data,
+                        borderColor: getColor(index),
+                        backgroundColor: getColor(index, 0.2),
+                        borderWidth: 2,
+                        pointRadius: dataset.type === 'scatter' ? 5 : 0,
+                        fill: dataset.type === 'line' && index === 0 ? false : true
+                    }))
+                };
+            } else {
+                // 单系列数据
+                chartData = {
+                    labels: dataset.labels,
+                    datasets: [{
+                        label: dataset.seriesLabels[0],
+                        data: dataset.data,
+                        backgroundColor: Array.from({length: dataset.data.length}, (_, i) => getColor(i, 0.7)),
+                        borderColor: Array.from({length: dataset.data.length}, (_, i) => getColor(i)),
+                        borderWidth: 1
+                    }]
+                };
+            }
+            
+            currentChart = new Chart(ctx, {
+                type: dataset.type,
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1000 / animationSpeed
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: dataset.description,
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: type === 'movie' ? '电影名称' : 
+                                      type === 'boxplot' ? '零件类型' : 
+                                      type === 'trend' ? '月份' : 'x轴'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: type === 'movie' ? '票房（亿元）' : 
+                                      type === 'boxplot' ? '质量评分' : 
+                                      type === 'trend' ? '数值' : 'y轴'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            updateDescription(type);
+        }
+        
+        // 更新动画速度
+        function updateAnimationSpeed() {
+            animationSpeed = document.getElementById('animationSpeed').value;
+            const speedValue = document.getElementById('speedValue');
+            
+            if (animationSpeed <= 3) speedValue.textContent = '慢速';
+            else if (animationSpeed <= 7) speedValue.textContent = '中等';
+            else speedValue.textContent = '快速';
+            
+            if (currentChart) {
+                currentChart.options.animation.duration = 1000 / animationSpeed;
+                currentChart.update();
+            }
+        }
+        
+        // 更新描述信息
+        function updateDescription(type) {
+            const description = document.getElementById('chartDescription');
+            const dataDetails = document.getElementById('dataDetails');
+            
+            description.textContent = datasets[type].description;
+            
+            let details = '';
+            switch(type) {
+                case 'trigonometry':
+                    details = '<p><strong>三角函数数据：</strong>基于第三章数学函数可视化内容，展示正弦和余弦函数在[-π, π]区间的完整波形，包含256个精确数据点</p>';
+                    break;
+                case 'movie':
+                    details = '<p><strong>电影票房数据：</strong>基于第三章"2019年内地电影票房排行榜"实例，展示前十名电影的真实票房数据，反映2019年电影市场表现</p>';
+                    break;
+                case 'boxplot':
+                    details = '<p><strong>零件质量数据：</strong>基于第三章箱形图分析内容，展示6种不同零件质量评分的分布特征，包括中位数、四分位数等统计指标</p>';
+                    break;
+                case 'scatter':
+                    details = '<p><strong>随机分布数据：</strong>用于展示散点图的随机数据分布，帮助理解数据点的空间分布特征</p>';
+                    break;
+                case 'trend':
+                    details = '<p><strong>趋势分析数据：</strong>基于第三章趋势分析内容，对比2018年与2019年的月度数据变化趋势，帮助识别数据的发展规律</p>';
+                    break;
+            }
+            
+            dataDetails.innerHTML = details;
+        }
+        
+        // 获取颜色
+        function getColor(index, alpha = 1) {
+            const colors = [
+                `rgba(102, 126, 234, ${alpha})`,
+                `rgba(118, 75, 162, ${alpha})`,
+                `rgba(255, 99, 132, ${alpha})`,
+                `rgba(54, 162, 235, ${alpha})`,
+                `rgba(255, 159, 64, ${alpha})`,
+                `rgba(75, 192, 192, ${alpha})`,
+                `rgba(153, 102, 255, ${alpha})`,
+                `rgba(255, 205, 86, ${alpha})`
+            ];
+            return colors[index % colors.length];
+        }
+        
+        // 页面加载时初始化
+        window.onload = function() {
+            initChart();
+        };
+    </script>
+</body>
+</html>
